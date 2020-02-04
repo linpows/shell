@@ -209,7 +209,6 @@ static char * inputline;    /* currently processed input line */
         result = *inputline ? (buf[0] = *inputline++, 1) : YY_NULL; \
     }
 
-#define YY_NO_UNPUT
 #define YY_NO_INPUT
 #include "lex.yy.c"
 

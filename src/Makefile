@@ -7,6 +7,7 @@ LDLIBS=-ll -ldl -lreadline -lcurses
 # for this assignment
 CFLAGS=-Wall -Werror -Wmissing-prototypes -g -fPIC
 #YFLAGS=-v
+YACC=bison
 
 LIB_OBJECTS=list.o esh-utils.o esh-sys-utils.o
 OBJECTS=esh.o
@@ -32,8 +33,8 @@ $(LIB_OBJECTS) : $(HEADERS)
 esh-grammar.o: esh-grammar.y esh-grammar.l
 	$(LEX) $(LFLAGS) $*.l
 	$(YACC) $(YFLAGS) $<
-	$(CC) -Dlint -c -o $@ $(CFLAGS) y.tab.c
-	rm -f y.tab.c lex.yy.c
+	$(CC) -Dlint -c -o $@ $(CFLAGS) $*.tab.c
+	rm -f $*.tab.c lex.yy.c
 
 # build the shell
 esh: libesh.a $(OBJECTS) $(HEADERS) esh-grammar.o

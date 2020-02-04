@@ -1,3 +1,12 @@
 
 This directory contains skeleton files for the 'esh' project.
 
+To use valgrind, run:
+
+valgrind --suppressions=readline.supp ./esh
+
+On rlogin as of Spring 2020, activate devtoolset-7 before building:
+
+# scl enable devtoolset-7 bash
+
+

@@ -5,8 +5,6 @@
  *
  * Developed by Godmar Back for CS 3214 Fall 2009
  * Virginia Tech.
- * 
- * $Id: esh.h,v 1.4 2011/03/29 15:46:28 cs3214 Exp $
  */
 
 #include <stdbool.h>
@@ -14,6 +12,13 @@
 #include <stdlib.h>
 #include <termios.h>
 #include "list.h"
+
+#if __STDC_VERSION__ < 201112L
+#error C11 or later is required.  Please use a suitable compiler, such as gcc 7 or higher. \
+    On rlogin, use  \
+    scl enable devtoolset-7 bash \
+    before making
+#endif
 
 /* Forward declarations. */
 struct esh_command;

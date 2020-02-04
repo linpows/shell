@@ -30,9 +30,9 @@ static char *
 build_prompt_from_plugins(void)
 {
     char *prompt = NULL;
-    struct list_elem * e = list_begin(&esh_plugin_list);
 
-    for (; e != list_end(&esh_plugin_list); e = list_next(e)) {
+    for (struct list_elem * e = list_begin(&esh_plugin_list);
+         e != list_end(&esh_plugin_list); e = list_next(e)) {
         struct esh_plugin *plugin = list_entry(e, struct esh_plugin, elem);
 
         if (plugin->make_prompt == NULL)

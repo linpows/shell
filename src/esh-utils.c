@@ -110,10 +110,11 @@ void
 esh_pipeline_print(struct esh_pipeline *pipe)
 {
     int i = 1;
-    struct list_elem * e = list_begin (&pipe->commands); 
 
     printf(" Pipeline\n");
-    for (; e != list_end (&pipe->commands); e = list_next (e)) {
+    for (struct list_elem * e = list_begin (&pipe->commands); 
+         e != list_end (&pipe->commands); 
+         e = list_next (e)) {
         struct esh_command *cmd = list_entry(e, struct esh_command, elem);
 
         printf(" %d. ", i++);
@@ -128,10 +129,10 @@ esh_pipeline_print(struct esh_pipeline *pipe)
 void 
 esh_command_line_print(struct esh_command_line *cmdline)
 {
-    struct list_elem * e = list_begin (&cmdline->pipes); 
-
     printf("Command line\n");
-    for (; e != list_end (&cmdline->pipes); e = list_next (e)) {
+    for (struct list_elem * e = list_begin (&cmdline->pipes); 
+         e != list_end (&cmdline->pipes); 
+         e = list_next (e)) {
         struct esh_pipeline *pipe = list_entry(e, struct esh_pipeline, elem);
 
         printf(" ------------- \n");
@@ -144,9 +145,7 @@ esh_command_line_print(struct esh_command_line *cmdline)
 void 
 esh_command_line_free(struct esh_command_line *cmdline)
 {
-    struct list_elem * e = list_begin (&cmdline->pipes); 
-
-    for (; e != list_end (&cmdline->pipes); ) {
+    for (struct list_elem * e = list_begin (&cmdline->pipes); e != list_end (&cmdline->pipes); ) {
         struct esh_pipeline *pipe = list_entry(e, struct esh_pipeline, elem);
         e = list_remove(e);
         esh_pipeline_free(pipe);
@@ -157,9 +156,7 @@ esh_command_line_free(struct esh_command_line *cmdline)
 void 
 esh_pipeline_free(struct esh_pipeline *pipe)
 {
-    struct list_elem * e = list_begin (&pipe->commands); 
-
-    for (; e != list_end (&pipe->commands); ) {
+    for (struct list_elem * e = list_begin (&pipe->commands); e != list_end (&pipe->commands); ) {
         struct esh_command *cmd = list_entry(e, struct esh_command, elem);
         e = list_remove(e);
         esh_command_free(cmd);
