@@ -24,7 +24,7 @@ plugins/deadline.so: plugins/deadline.c
 		$< libesh.a $(shell curl-config --libs) cJSONFiles/cJSON.c -lm
 
 # The rules assume each plugin is in its own file
-$(PLUGIN_SO): %.so : %.c
+$(PLUGIN_SO): %.so : %.c libesh.a
 	gcc -Wall -shared -fPIC -o $@ $< libesh.a
 
 $(LIB_OBJECTS) : $(HEADERS)
