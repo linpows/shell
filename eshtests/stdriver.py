@@ -158,10 +158,16 @@ for testset in full_testlist:
     
         print str(points) + '\t' + testname + ':',
         sys.stdout.flush()
+
+        # augment PYTHONPATH so that our own version of pexpect and shellio
+        # are picked up.
+        augmented_env = dict(os.environ)
+        augmented_env['PYTHONPATH'] = script_dir + "/../pexpect-dpty/"
         
         # run test
         child_process = subprocess.Popen(["python", testset['dir'] + testname, \
                              output_spec_file, plugin_directory],\
+                             env=augmented_env,\
                              stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         test_passed = child_process.wait() == 0
 

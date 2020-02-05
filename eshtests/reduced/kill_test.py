@@ -15,7 +15,6 @@
 
 
 import sys, imp, atexit
-sys.path.append("/home/courses/cs3214/software/pexpect-dpty/");
 import pexpect, shellio, signal, time, os, re, proc_check
 
 #Ensure the shell process is terminated
