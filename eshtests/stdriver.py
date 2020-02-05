@@ -25,13 +25,9 @@
 import getopt, os, sys, subprocess, re
 
 # add directory in which script is located to python path
-script_dir = "/".join(__file__.split("/")[:-1])
-if script_dir == "":
-    script_dir = "."
 # resolve any symlinks
-script_dir = os.path.realpath(script_dir)
-if script_dir not in sys.path:
-    sys.path.append(script_dir)
+script_file = os.path.realpath(__file__)
+script_dir = "/".join(script_file.split("/")[:-1])
 
 verbose = False
 output_spec_file = "./eshoutput.py"
