@@ -7,4 +7,4 @@ The script analyze_shell.sh will tar up the src directory and send it for analys
 
 The script make_p1_tar.sh is a helper script that makes a tarfile of the src directory at the parameter.
 
-You can use the make_p1_tar.sh with the ~cs3214/bin/analysis-submit.sh script to manually send your tarfile for analysis.
+If you are running this outside rlogin, make sure Python 2 and the requests package is installed.
