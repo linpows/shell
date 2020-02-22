@@ -6,11 +6,13 @@
  */
 
 #include "esh.h"
+#include "jobs.h"
 
 /* saves startup state to return to*/
 pid_t esh_pgrp;
 struct termios* eshState;
 
+int jid = 1;
 
 /**
  * SIGCHLD handler.
@@ -107,8 +109,6 @@ static int esh_launch_foreground(struct esh_pipeline *pipe){
 		pid_t pid;
 		struct esh_command *currCommand = list_entry (e, struct esh_command, elem);
 		
-		
-		
 		if((pid = fork()) == 0) {
 			//in child
 			
@@ -156,14 +156,26 @@ static int esh_execute(struct esh_command_line *rline){
 	for (e = list_begin(&rline->pipes); e != list_end(&rline->pipes); e = list_next(e)) 
 	{
 		struct esh_pipeline *currPipe = list_entry (e, struct esh_pipeline, elem);
+		
+		list_push_back(&job_list, e);
+
+        jid++;
+        if (list_empty(&job_list))
+        {
+            jid = 1;
+        }
+        currPipe->jid = jid;
+		
 		if(!currPipe->bg_job) {
 			//foreground jobs
+			currPipe->status = FOREGROUND;
 			esh_launch_foreground(currPipe);
 			
 			
 		}
 		else {
 			//BG job
+			currPipe->status = BACKGROUND;
 		}
 	}
 	
@@ -238,7 +250,10 @@ struct esh_shell shell =
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 int main(int ac, char *av[]) {
     int opt;
+    
+    /* create plugin list and job list */
     list_init(&esh_plugin_list);
+    list_init(&job_list);
 
     /* Process command-line arguments. See getopt(3) */
     while ((opt = getopt(ac, av, "hp:")) > 0) {
