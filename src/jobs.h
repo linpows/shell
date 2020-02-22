@@ -2,10 +2,7 @@
 #define __JOBS_H
 
 /*
- * esh - the 'extensible' shell.
- *
- * Developed by Godmar Back for CS 3214 Fall 2009
- * Virginia Tech.
+ * job list functions
  */
 #include <assert.h>
 #include <sys/wait.h>
@@ -17,9 +14,6 @@
 #include "list.h"
 #include "esh.h"
 #include "esh-sys-utils.h"
- 
-/* list of jobs */
-extern struct list job_list;
 
 /* gets job from jid */
 struct esh_pipeline * get_job_from_jid(int jid, struct list job_list);

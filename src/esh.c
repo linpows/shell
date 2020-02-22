@@ -12,6 +12,7 @@
 pid_t esh_pgrp;
 struct termios* eshState;
 
+struct list job_list;
 int jid = 1;
 
 /**
