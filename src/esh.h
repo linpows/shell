@@ -1,17 +1,25 @@
 #ifndef __ESH_H
 #define __ESH_H
+#define _XOPEN_SOURCE 500
+
 /*
  * esh - the 'extensible' shell.
  *
  * Developed by Godmar Back for CS 3214 Fall 2009
  * Virginia Tech.
  */
-
+#include <assert.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <readline/readline.h>
 #include <stdbool.h>
 #include <obstack.h>
 #include <stdlib.h>
 #include <termios.h>
 #include "list.h"
+#include "esh-sys-utils.h"
 
 #if __STDC_VERSION__ < 201112L
 #error C11 or later is required.  Please use a suitable compiler, such as gcc 7 or higher. \
@@ -20,6 +28,8 @@
     before making
 #endif
 
+
+ 
 /* Forward declarations. */
 struct esh_command;
 struct esh_pipeline;
@@ -147,6 +157,7 @@ struct esh_pipeline {
                                         stopped after having been in foreground */
 
     /* Add additional fields here if needed. */
+    bool	pgrpset;
 };
 
 /* A command is part of a pipeline. */
@@ -209,5 +220,21 @@ void esh_plugin_initialize(struct esh_shell *shell);
 
 /* List of loaded plugins */
 extern struct list esh_plugin_list;
+
+/*________________________________________/
+ * START: ~NEW FUCTIONS
+ * _____________________________________/
+ */
+//void give_terminal_to(pid_t pgrp, struct termios *pg_tty_state);
+//static void wait_for_job(struct esh_pipeline *pipeline);
+//void sigchld_handler(int sig, siginfo_t *info, void *_ctxt);
+//static int esh_launch_foreground(struct esh_pipeline* pipe);
+//static int esh_execute(struct esh_command_line* rline);
+ /*________________________________________/
+ * END: ~NEW FUCTIONS
+ * _____________________________________/
+ */
+ 
+
 
 #endif //__ESH_H
