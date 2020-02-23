@@ -14,6 +14,65 @@ struct termios* eshState;
 
 int jid = 1;
 
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+/* Build a prompt by assembling fragments from loaded plugins that 
+ * implement 'make_prompt.'
+ *
+ * This function demonstrates how to iterate over all loaded plugins.
+ */
+static char *
+build_prompt_from_plugins(void)
+{
+    char *prompt = NULL;
+
+    for (struct list_elem * e = list_begin(&esh_plugin_list);
+         e != list_end(&esh_plugin_list); e = list_next(e)) {
+        struct esh_plugin *plugin = list_entry(e, struct esh_plugin, elem);
+
+        if (plugin->make_prompt == NULL)
+            continue;
+
+        /* append prompt fragment created by plug-in */
+        char * p = plugin->make_prompt();
+        if (prompt == NULL) {
+            prompt = p;
+        } else {
+            prompt = realloc(prompt, strlen(prompt) + strlen(p) + 1);
+            strcat(prompt, p);
+            free(p);
+        }
+    }
+
+    /* default prompt */
+    if (prompt == NULL)
+        prompt = strdup("esh> ");
+
+    return prompt;
+}
+
+/* The shell object plugins use.
+ * Some methods are set to defaults.
+ */
+struct esh_shell shell =
+{
+	.get_jobs = get_jobs,
+	.get_job_from_jid = get_job_from_jid,
+	.get_job_from_pgid = get_job_from_pgid,
+	.get_cmd_from_pid = get_cmd_from_pid,
+	
+	/* defaults */
+    .build_prompt = build_prompt_from_plugins,
+    .readline = readline,       /* GNU readline(3) */ 
+    .parse_command_line = esh_parse_command_line /* Default parser */
+};
+
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
 /**
  * SIGCHLD handler.
  * Call waitpid() to learn about any child processes that
@@ -182,7 +241,6 @@ static int esh_execute(struct esh_command_line *rline){
 	return 0;
 }
 
-
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -197,58 +255,6 @@ usage(char *progname)
     exit(EXIT_SUCCESS);
 }
 
-/* Build a prompt by assembling fragments from loaded plugins that 
- * implement 'make_prompt.'
- *
- * This function demonstrates how to iterate over all loaded plugins.
- */
-static char *
-build_prompt_from_plugins(void)
-{
-    char *prompt = NULL;
-
-    for (struct list_elem * e = list_begin(&esh_plugin_list);
-         e != list_end(&esh_plugin_list); e = list_next(e)) {
-        struct esh_plugin *plugin = list_entry(e, struct esh_plugin, elem);
-
-        if (plugin->make_prompt == NULL)
-            continue;
-
-        /* append prompt fragment created by plug-in */
-        char * p = plugin->make_prompt();
-        if (prompt == NULL) {
-            prompt = p;
-        } else {
-            prompt = realloc(prompt, strlen(prompt) + strlen(p) + 1);
-            strcat(prompt, p);
-            free(p);
-        }
-    }
-
-    /* default prompt */
-    if (prompt == NULL)
-        prompt = strdup("esh> ");
-
-    return prompt;
-}
-
-/* The shell object plugins use.
- * Some methods are set to defaults.
- */
-struct esh_shell shell =
-{
-	.get_jobs = get_jobs;
-	.get_job_from_jid = get_job_from_jid;
-	.get_job_from_pgid = get_job_from_pgid;
-	//.get_cmd_from_pid = get_cmd_from_pid;
-	
-	/* defaults */
-    .build_prompt = build_prompt_from_plugins,
-    .readline = readline,       /* GNU readline(3) */ 
-    .parse_command_line = esh_parse_command_line /* Default parser */
-};
-
-
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 /**~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * ||||||||||||||||||||||||||||||MAIN|||||||||||||||||||||||||||||||||
@@ -259,7 +265,7 @@ int main(int ac, char *av[]) {
     
     /* create plugin list and job list */
     list_init(&esh_plugin_list);
-    list_init(shell.job_list());
+    list_init(shell.get_jobs());
 
     /* Process command-line arguments. See getopt(3) */
     while ((opt = getopt(ac, av, "hp:")) > 0) {
