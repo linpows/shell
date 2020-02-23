@@ -15,8 +15,17 @@
 #include "esh.h"
 #include "esh-sys-utils.h"
 
-/* gets job from jid */
-struct esh_pipeline * get_job_from_jid(int jid, struct list job_list);
+/* Return the list of current jobs */
+struct list * get_jobs();
+
+/* Return job corresponding to jid */
+struct esh_pipeline * get_job_from_jid(int jid);
+
+/* Return job corresponding to pgrp */
+struct esh_pipeline * get_job_from_pgid(pid_t pgrp);
+
+/* Return process corresponding to pid */
+struct esh_command * get_cmd_from_pid(pid_t pid);
  
 /* built-in jobs command */
 void builtin_jobs(struct list job_list);
@@ -25,12 +34,9 @@ void builtin_jobs(struct list job_list);
  * Gets job status by pid, stored in pipeline->status
  * removes job from list if terminated
  */
-void job_status(pid_t pid, int status, struct list job_list);
+void job_status(pid_t pid, int status);
 
 /* prints a job's commands */
 void print_job(struct esh_pipeline *pipe);
-
-/* gets the job by the pgid */
-struct esh_pipeline * get_job_from_pgid(pid_t pgrp, struct list job_list);
 
 #endif //__JOBS_H

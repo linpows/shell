@@ -4,8 +4,16 @@
 
 #include "jobs.h"
 
-/* gets job from jid */
-struct esh_pipeline * get_job_from_jid(int jid, struct list job_list)
+struct list job_list;
+
+/* Return the list of current jobs */
+struct list * get_jobs()
+{
+	return &job_list;
+}
+
+/* Return job corresponding to jid */
+struct esh_pipeline * get_job_from_jid(int jid)
 {
     struct list_elem * e;
 
@@ -21,8 +29,29 @@ struct esh_pipeline * get_job_from_jid(int jid, struct list job_list)
     return NULL;
 }
 
+/* Return job corresponding to pgrp */
+struct esh_pipeline * get_job_from_pgid(pid_t pgrp) 
+{
+    struct list_elem *e;
+    for (e = list_begin(&job_list); e != list_end(&job_list); e = list_next(e))
+    {
+        struct esh_pipeline *job = list_entry(e, struct esh_pipeline, elem);
+        if (job->pgrp == pgrp)
+        {
+            return job;
+        }
+    }
+    return NULL;
+}
+
+/* Return process corresponding to pid */
+struct esh_command * get_cmd_from_pid(pid_t pid){
+	// TODO
+	return NULL;
+}
+
 /* built-in jobs command */
-void builtin_jobs(struct list job_list)
+void builtin_jobs()
 {
     int i = 1;
     char *status_strings[] = {"Foreground", "Running", "Stopped", "Needs Terminal"};
@@ -43,7 +72,7 @@ void builtin_jobs(struct list job_list)
  * Gets job status by pid, stored in pipeline->status
  * removes job from list if terminated
  */
-void job_status(pid_t pid, int status, struct list job_list)
+void job_status(pid_t pid, int status)
 {
 	if (pid > 0) 
 	{
@@ -107,20 +136,4 @@ void print_job(struct esh_pipeline *pipe)
     }
 
     printf(")\n");
-}
-
-/* gets the job by the pgid */
-struct esh_pipeline * get_job_from_pgid(pid_t pgrp, struct list job_list) 
-{
-    struct list_elem *e;
-    for (e = list_begin(&job_list); e != list_end(&job_list); e = list_next(e))
-    {
-        struct esh_pipeline *job = list_entry(e, struct esh_pipeline, elem);
-        if (job->pgrp == pgrp)
-        {
-            return job;
-        }
-    }
-
-    return NULL;
 }

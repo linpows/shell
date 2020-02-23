@@ -12,7 +12,6 @@
 pid_t esh_pgrp;
 struct termios* eshState;
 
-struct list job_list;
 int jid = 1;
 
 /**
@@ -158,10 +157,10 @@ static int esh_execute(struct esh_command_line *rline){
 	{
 		struct esh_pipeline *currPipe = list_entry (e, struct esh_pipeline, elem);
 		
-		list_push_back(&job_list, e);
+		list_push_back(shell.get_jobs(), e);
 
         jid++;
-        if (list_empty(&job_list))
+        if (list_empty(shell.get_jobs()))
         {
             jid = 1;
         }
@@ -238,6 +237,12 @@ build_prompt_from_plugins(void)
  */
 struct esh_shell shell =
 {
+	.get_jobs = get_jobs;
+	.get_job_from_jid = get_job_from_jid;
+	.get_job_from_pgid = get_job_from_pgid;
+	//.get_cmd_from_pid = get_cmd_from_pid;
+	
+	/* defaults */
     .build_prompt = build_prompt_from_plugins,
     .readline = readline,       /* GNU readline(3) */ 
     .parse_command_line = esh_parse_command_line /* Default parser */
@@ -254,7 +259,7 @@ int main(int ac, char *av[]) {
     
     /* create plugin list and job list */
     list_init(&esh_plugin_list);
-    list_init(&job_list);
+    list_init(shell.job_list());
 
     /* Process command-line arguments. See getopt(3) */
     while ((opt = getopt(ac, av, "hp:")) > 0) {
