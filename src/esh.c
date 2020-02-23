@@ -60,7 +60,7 @@ struct esh_shell shell =
 {
 	.get_jobs = get_jobs,
 	.get_job_from_jid = get_job_from_jid,
-	.get_job_from_pgid = get_job_from_pgid,
+	.get_job_from_pgrp = get_job_from_pgrp,
 	.get_cmd_from_pid = get_cmd_from_pid,
 	
 	/* defaults */
