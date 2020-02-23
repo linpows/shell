@@ -15,7 +15,7 @@
 #include "esh.h"
 
 /* Return the list of current jobs */
-struct list * get_jobs();
+struct list * get_jobs(void);
 
 /* Return job corresponding to jid */
 struct esh_pipeline * get_job_from_jid(int jid);
@@ -27,7 +27,7 @@ struct esh_pipeline * get_job_from_pgid(pid_t pgrp);
 struct esh_command * get_cmd_from_pid(pid_t pid);
  
 /* built-in jobs command */
-void builtin_jobs();
+void builtin_jobs(void);
 
 /* 
  * Gets job status by pid, stored in pipeline->status
