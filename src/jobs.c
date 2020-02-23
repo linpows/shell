@@ -30,7 +30,7 @@ struct esh_pipeline * get_job_from_jid(int jid)
 }
 
 /* Return job corresponding to pgrp */
-struct esh_pipeline * get_job_from_pgid(pid_t pgrp) 
+struct esh_pipeline * get_job_from_pgrp(pid_t pgrp) 
 {
     struct list_elem *e;
     for (e = list_begin(&job_list); e != list_end(&job_list); e = list_next(e))

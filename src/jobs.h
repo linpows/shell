@@ -21,7 +21,7 @@ struct list * get_jobs(void);
 struct esh_pipeline * get_job_from_jid(int jid);
 
 /* Return job corresponding to pgrp */
-struct esh_pipeline * get_job_from_pgid(pid_t pgrp);
+struct esh_pipeline * get_job_from_pgrp(pid_t pgrp);
 
 /* Return process corresponding to pid */
 struct esh_command * get_cmd_from_pid(pid_t pid);
