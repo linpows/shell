@@ -4,7 +4,7 @@
 /*
  * job list functions
  */
-#include <assert.h>
+ 
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -13,7 +13,6 @@
 #include <stdlib.h>
 #include "list.h"
 #include "esh.h"
-#include "esh-sys-utils.h"
 
 /* Return the list of current jobs */
 struct list * get_jobs();
@@ -28,7 +27,7 @@ struct esh_pipeline * get_job_from_pgid(pid_t pgrp);
 struct esh_command * get_cmd_from_pid(pid_t pid);
  
 /* built-in jobs command */
-void builtin_jobs(struct list job_list);
+void builtin_jobs();
 
 /* 
  * Gets job status by pid, stored in pipeline->status
