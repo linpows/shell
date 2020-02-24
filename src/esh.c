@@ -39,6 +39,41 @@ static void sigchld_handler(int sig, siginfo_t *info, void *_ctxt)
 }
 */
 
+/**
+ * removes terminated and interrupted processes from pipeline
+ * 
+ */
+static void child_status_change(pid_t child, int status, struct esh_pipeline *pipeline)
+{
+	if (WIFEXITED(status)){
+		struct list_elem *e;
+		struct list_elem *remove;
+		
+		e = list_begin(&(pipeline->commands)); // starting position
+		while (e != list_end (&(pipeline->commands))){
+			// obtains struct using pointer arithmetic
+			struct esh_command *curr = list_entry (e, struct esh_command, elem);
+			if(curr->pid == child) {
+				remove = &curr->elem;
+				break;
+			}
+			e = list_next(e); // increment condition
+		}
+		
+		// remove terminated child command
+		//struct esh_command *removed = list_entry(remove, struct esh_command, elem);
+		list_remove(remove);
+		//free(removed);
+	}
+	else if (WIFSTOPPED(status)){
+		pipeline->status = BACKGROUND;
+	}
+	else {
+		perror("unknown Status: ");
+	}
+}
+
+
 /* Wait for all processes in this pipeline to complete, or for
  * the pipeline's process group to no longer be the foreground
  * process group.
@@ -64,7 +99,7 @@ static void wait_for_job(struct esh_pipeline *pipeline)
 
         pid_t child = waitpid(-1, &status, WUNTRACED);
         if (child != -1) {
-            //child_status_change(child, status);
+            child_status_change(child, status, pipeline);
 		}
     }
 }
@@ -99,45 +134,64 @@ static int esh_launch_foreground(struct esh_pipeline *pipe){
 	struct list_elem *e;
 	esh_signal_block(SIGCHLD);
 	
-	//pipe->saved_tty_state = calloc(1, sizeof(struct termios));
-	esh_sys_tty_save((& pipe->saved_tty_state));
+	//set status
 	
+	//create a terminal object for pipeline;
+	esh_sys_tty_save((& pipe->saved_tty_state));
+	bool has_set_pipe_pgrp = false;
+	
+	pid_t c_pid;
 	for (e = list_begin(&pipe->commands); e != list_end(&pipe->commands); e = list_next(e)) 
 	{
-		pid_t pid;
+		
 		struct esh_command *currCommand = list_entry (e, struct esh_command, elem);
 		
-		
-		
-		if((pid = fork()) == 0) {
+		if((c_pid = fork()) == 0) {
 			//in child
 			
 			//ID setup
 			currCommand->pid = getpid();
-			if(!(pipe->pgrp)){
-				//initialize project group and give it terminal access
+			if(has_set_pipe_pgrp == false){
+				//initialize project group for entire pipeline
 				pipe->pgrp = currCommand->pid;
 				give_terminal_to(pipe->pgrp, (& pipe->saved_tty_state));
 			}
+			
+			//set individual process groups
 			if(setpgid(0, pipe->pgrp) < 0){
-				perror("process group Error:");
+				perror("child setting process group Error");
 			}
 			
 			//execute here
 			esh_signal_unblock(SIGCHLD);
 			if (execvp(currCommand->argv[0], currCommand->argv) == -1) {
-				perror("process failed:");
+				perror("process failed execution");
 			}
 			exit(EXIT_FAILURE);
 		}
-		else if (pid < 0) {
-			perror("forking error:");
+		////////////////////////////////////////////////////////////
+		else if (c_pid < 0) {
+			perror("forking error");
 		}
 		else {
 			//in parent
+			if(has_set_pipe_pgrp == false){
+				//initialize project group for entire pipeline
+				pipe->pgrp = c_pid;
+				has_set_pipe_pgrp = true;
+			}
+			
+			if(setpgid(c_pid, pipe->pgrp) < 0){
+				perror("Parent Setting child process group error");
+			}
+			
+			currCommand->pid = c_pid;
+			
+			//printf("%d : pipe group id\n%d esh group id:\n", c_pid, getpgrp());
 			
 		}
 	}
+	give_terminal_to(c_pid, (& pipe->saved_tty_state));
 	//wait for all forked jobs and update child status
 	wait_for_job(pipe);
 	
@@ -158,12 +212,14 @@ static int esh_execute(struct esh_command_line *rline){
 		struct esh_pipeline *currPipe = list_entry (e, struct esh_pipeline, elem);
 		if(!currPipe->bg_job) {
 			//foreground jobs
+			currPipe->status = FOREGROUND;
 			esh_launch_foreground(currPipe);
 			
 			
 		}
 		else {
 			//BG job
+			currPipe->status = BACKGROUND;
 		}
 	}
 	
@@ -283,7 +339,7 @@ int main(int ac, char *av[]) {
         esh_execute(cline);
         give_terminal_to(esh_pgrp, eshState);
         //esh_command_line_print(cline);
-        esh_command_line_free(cline);
+        //esh_command_line_free(cline);
         
         
     }
