@@ -45,7 +45,20 @@ static void sigchld_handler(int sig, siginfo_t *info, void *_ctxt)
  */
 static void child_status_change(pid_t child, int status, struct esh_pipeline *pipeline)
 {
-	if (WIFEXITED(status)){
+	
+	//SIGSTOP CASE
+	if (WIFSTOPPED(status)){
+		pipeline->status = BACKGROUND;
+		printf("\n");	
+		printf("Process Stopped\n"); // ADD JOBS STOPPED PROCESS OUTPUT
+		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^
+		//add to jobs list
+	}
+	//SIGCHLD and SIGINT case
+	else {
+		if (WIFSIGNALED(status)){
+			printf("\n");
+		}
 		struct list_elem *e;
 		struct list_elem *remove;
 		
@@ -65,12 +78,11 @@ static void child_status_change(pid_t child, int status, struct esh_pipeline *pi
 		list_remove(remove);
 		//free(removed);
 	}
-	else if (WIFSTOPPED(status)){
-		pipeline->status = BACKGROUND;
-	}
+	/*
 	else {
-		perror("unknown Status: ");
-	}
+		perror("unknown child Status: ");
+	}*/
+	
 }
 
 
@@ -102,6 +114,10 @@ static void wait_for_job(struct esh_pipeline *pipeline)
             child_status_change(child, status, pipeline);
 		}
     }
+    if(pipeline->status == FOREGROUND){
+		//not stopped, free pipeline
+		free(pipeline);
+	}
 }
 
 
@@ -125,6 +141,78 @@ static void give_terminal_to(pid_t pgrp, struct termios *pg_tty_state)
     if (pg_tty_state)
         esh_sys_tty_restore(pg_tty_state);
     esh_signal_unblock(SIGTTOU);
+}
+
+/**
+ * function to handle background execution
+ */
+static int esh_launch_background(struct esh_pipeline *pipe){
+	struct list_elem *e;
+	esh_signal_block(SIGCHLD);
+	
+	//set status
+	
+	//create a terminal object for pipeline;
+	esh_sys_tty_save((& pipe->saved_tty_state));
+	bool has_set_pipe_pgrp = false;
+	
+	pid_t c_pid;
+	for (e = list_begin(&pipe->commands); e != list_end(&pipe->commands); e = list_next(e)) 
+	{
+		
+		struct esh_command *currCommand = list_entry (e, struct esh_command, elem);
+		
+		if((c_pid = fork()) == 0) {
+			//in child
+			
+			//ID setup
+			currCommand->pid = getpid();
+			if(has_set_pipe_pgrp == false){
+				//initialize project group for entire pipeline
+				pipe->pgrp = currCommand->pid;
+				give_terminal_to(pipe->pgrp, (& pipe->saved_tty_state));
+			}
+			
+			//set individual process groups
+			if(setpgid(0, pipe->pgrp) < 0){
+				perror("child setting process group Error");
+			}
+			
+			//execute here
+			esh_signal_unblock(SIGCHLD);
+			if (execvp(currCommand->argv[0], currCommand->argv) == -1) {
+				perror("process failed execution");
+			}
+			exit(EXIT_FAILURE);
+		}
+		////////////////////////////////////////////////////////////
+		else if (c_pid < 0) {
+			perror("forking error");
+		}
+		else {
+			//in parent
+			if(has_set_pipe_pgrp == false){
+				//initialize project group for entire pipeline
+				pipe->pgrp = c_pid;
+				has_set_pipe_pgrp = true;
+			}
+			
+			if(setpgid(c_pid, pipe->pgrp) < 0){
+				perror("Parent Setting child process group error");
+			}
+			
+			currCommand->pid = c_pid;
+			
+			//printf("%d : pipe group id\n%d esh group id:\n", c_pid, getpgrp());
+			
+		}
+	}
+	give_terminal_to(c_pid, (& pipe->saved_tty_state));
+	//wait for all forked jobs and update child status
+	wait_for_job(pipe);
+	
+	esh_signal_unblock(SIGCHLD);
+	return 0;
 }
 
 /**
