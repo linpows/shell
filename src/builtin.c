@@ -22,7 +22,7 @@ void run_builtin(struct esh_pipeline* pipe)
 
     if (strncmp(cmd->argv[0], "jobs", 4) == 0)
     {
-        jobs_builtin();
+        builtin_jobs();
     }
     if (strncmp(cmd->argv[0], "fg", 2) == 0)
     {
