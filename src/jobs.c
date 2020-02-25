@@ -4,12 +4,12 @@
 
 #include "jobs.h"
 
-struct list job_list;
+
 
 /* Return the list of current jobs */
 struct list * get_jobs()
 {
-	return &job_list;
+	return job_list;
 }
 
 /* Return job corresponding to jid */
@@ -17,7 +17,7 @@ struct esh_pipeline * get_job_from_jid(int jid)
 {
     struct list_elem * e;
 
-    for (e  = list_begin(&job_list); e != list_end(&job_list); e = list_next(e))
+    for (e  = list_begin(job_list); e != list_end(job_list); e = list_next(e))
     {
         struct esh_pipeline *pipeE= list_entry(e, struct esh_pipeline, elem);
 
@@ -33,7 +33,7 @@ struct esh_pipeline * get_job_from_jid(int jid)
 struct esh_pipeline * get_job_from_pgrp(pid_t pgrp) 
 {
     struct list_elem *e;
-    for (e = list_begin(&job_list); e != list_end(&job_list); e = list_next(e))
+    for (e = list_begin(job_list); e != list_end(job_list); e = list_next(e))
     {
         struct esh_pipeline *job = list_entry(e, struct esh_pipeline, elem);
         if (job->pgrp == pgrp)
@@ -46,12 +46,12 @@ struct esh_pipeline * get_job_from_pgrp(pid_t pgrp)
 
 /* Return process corresponding to pid */
 struct esh_command * get_cmd_from_pid(pid_t pid){
-	if (!list_empty(&job_list))
+	if (!list_empty(job_list))
     {
-        struct list_elem * e = list_begin(&job_list);
+        struct list_elem * e = list_begin(job_list);
         struct esh_pipeline * job;
 
-        for (job = list_entry(e, struct esh_pipeline, elem); e != list_end(&job_list); e = list_next(e))
+        for (job = list_entry(e, struct esh_pipeline, elem); e != list_end(job_list); e = list_next(e))
         {
 			job = list_entry(e, struct esh_pipeline, elem);
 			struct list_elem * c = list_begin(&job->commands);
@@ -75,12 +75,12 @@ struct esh_command * get_cmd_from_pid(pid_t pid){
 void jobs_builtin()
 {
     char *status_strings[] = {"Foreground", "Running", "Stopped", "Needs Terminal"};
-    if (!list_empty(&job_list))
+    if (!list_empty(job_list))
     {
-        struct list_elem * e = list_begin(&job_list);
+        struct list_elem * e = list_begin(job_list);
         struct esh_pipeline * job;
 
-        for (job = list_entry(e, struct esh_pipeline, elem); e != list_end(&job_list); e = list_next(e))
+        for (job = list_entry(e, struct esh_pipeline, elem); e != list_end(job_list); e = list_next(e))
         {
 			job = list_entry(e, struct esh_pipeline, elem);
             printf("[%d]     %s",job->jid, status_strings[job->status]);
@@ -98,7 +98,7 @@ void job_status(pid_t pid, int status)
 	if (pid > 0) 
 	{
 		struct list_elem *e;
-        for (e = list_begin(&job_list); e != list_end(&job_list); e = list_next(e)) 
+        for (e = list_begin(job_list); e != list_end(job_list); e = list_next(e)) 
         {
 			struct esh_pipeline *pipeline = list_entry(e, struct esh_pipeline, elem);
 

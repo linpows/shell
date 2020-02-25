@@ -20,6 +20,8 @@
 #include <termios.h>
 #include "list.h"
 #include "esh-sys-utils.h"
+#include "jobs.h"
+#include "builtin.h"
 
 #if __STDC_VERSION__ < 201112L
 #error C11 or later is required.  Please use a suitable compiler, such as gcc 7 or higher. \
@@ -157,7 +159,7 @@ struct esh_pipeline {
                                         stopped after having been in foreground */
 
     /* Add additional fields here if needed. */
-    bool	pgrpset;
+    bool	pgrpset;	// has the process group been set?
 };
 
 /* A command is part of a pipeline. */

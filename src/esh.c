@@ -10,21 +10,40 @@
 /* saves startup state to return to*/
 pid_t esh_pgrp;
 struct termios* eshState;
+int jobNum;
+
+
+/* adds a new job to the list*/
+static int job_add_new(struct esh_pipeline *newJob) {
+	newJob->jid = jobNum;
+	
+	list_push_front(job_list, &(newJob->elem));
+	return newJob->jid;
+}
+
 
 /**
  * removes terminated and interrupted processes from pipeline
  * 
  */
-static void child_status_change(pid_t child, int status, struct esh_pipeline *pipeline)
+static void 
+child_status_change(pid_t child, int status, struct esh_pipeline *pipeline)
 {
 	
 	//SIGSTOP CASE
 	if (WIFSTOPPED(status)){
+		
 		pipeline->status = BACKGROUND;
 		printf("\n");	
+		//add to jobs list and print formatted output
+		
+		print_job(get_job_from_jid(job_add_new(pipeline)));
+		/*
 		printf("Process Stopped\n"); // ADD JOBS STOPPED PROCESS OUTPUT
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^
-		//add to jobs list 
+		*/
+		
+		
 	}
 	//SIGCHLD and SIGINT case
 	else {
@@ -45,9 +64,16 @@ static void child_status_change(pid_t child, int status, struct esh_pipeline *pi
 			e = list_next(e); // increment condition
 		}
 		
-		// remove terminated child command
-		//struct esh_command *removed = list_entry(remove, struct esh_command, elem);
 		list_remove(remove);
+		
+		if(list_empty(&pipeline->commands) && pipeline->status == BACKGROUND){
+			//remove from jobs list 
+			//MAY NEED TO UPDATE JOB NUMBERING
+			list_remove(&pipeline->elem);
+			
+		}
+		
+		//struct esh_command *removed = list_entry(remove, struct esh_command, elem);
 		//free(removed);
 	}
 }
@@ -75,9 +101,7 @@ static void sigchld_handler(int sig, siginfo_t *info, void *_ctxt)
     assert(sig == SIGCHLD);
 
     while ((child = waitpid(-1, &status, WUNTRACED|WNOHANG)) > 0) {
-		esh_signal_block(SIGCHLD);
-        child_status_change(child, status, get_cmd_from_pid(child)->pipeline);
-        esh_signal_unblock(SIGCHLD);
+        child_status_change(child, status, (get_cmd_from_pid(child))->pipeline);
     }
 }
 
@@ -141,16 +165,14 @@ static void give_terminal_to(pid_t pgrp, struct termios *pg_tty_state)
 /**
  * function to handle background execution
  */
-static int esh_launch_background(struct esh_pipeline *pipe){
+static struct esh_pipeline * esh_launch_background(struct esh_pipeline *pipe){
 	struct list_elem *e;
 	bool has_set_pipe_pgrp = false;
-	//set status
 	
 	//create a terminal object for pipeline if it has not already been made
 	if(!pipe->pgrpset) {
 		esh_sys_tty_save((& pipe->saved_tty_state));
 	}
-	
 	
 	pid_t c_pid;
 	for (e = list_begin(&pipe->commands); e != list_end(&pipe->commands); e = list_next(e)) 
@@ -176,13 +198,13 @@ static int esh_launch_background(struct esh_pipeline *pipe){
 			//execute here
 			esh_signal_unblock(SIGCHLD);
 			if (execvp(currCommand->argv[0], currCommand->argv) == -1) {
-				perror("background process failed execution");
+				perror("(background) process failed execution");
 			}
 			exit(EXIT_FAILURE);
 		}
 		////////////////////////////////////////////////////////////
 		else if (c_pid < 0) {
-			perror("forking error");
+			perror("(background) forking error");
 		}
 		else {
 			//in parent
@@ -193,14 +215,13 @@ static int esh_launch_background(struct esh_pipeline *pipe){
 			}
 			
 			if(setpgid(c_pid, pipe->pgrp) < 0){
-				perror("Parent Setting child process group error");
+				perror("(background) Parent Setting child process group error");
 			}
-			
 			currCommand->pid = c_pid;
 		}
 	}
-	//ADD TO JOBS LIST HERE~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	return 0;
+	
+	return pipe;
 }
 
 /**
@@ -265,6 +286,7 @@ static int esh_launch_foreground(struct esh_pipeline *pipe){
 		}
 	}
 	give_terminal_to(c_pid, (& pipe->saved_tty_state));
+	
 	//wait for all forked jobs and update child status
 	wait_for_job(pipe);
 	
@@ -279,25 +301,31 @@ static int esh_launch_foreground(struct esh_pipeline *pipe){
  */
 static int esh_execute(struct esh_command_line *rline){
 	struct list_elem *e;
-	esh_signal_block(SIGCHLD);
-	//### IMPLEMENT JOB ID HANDLING HERE
-	for (e = list_begin(&rline->pipes); e != list_end(&rline->pipes); e = list_next(e)) 
+	
+	while(!list_empty(&rline->pipes)) 
 	{
-		struct esh_pipeline *currPipe = list_entry (e, struct esh_pipeline, elem);
+		e = list_pop_front(&rline->pipes);
+		
+		struct esh_pipeline *currPipe = 
+			list_entry (e, struct esh_pipeline, elem);
+		
 		if(!currPipe->bg_job) {
 			//foreground jobs
 			currPipe->status = FOREGROUND;
 			esh_launch_foreground(currPipe);
 			
 			
+			//give terminal back to shell
+			give_terminal_to(esh_pgrp, eshState);
 		}
 		else {
 			//BG job
 			currPipe->status = BACKGROUND;
-			esh_launch_background(currPipe);
+			struct esh_pipeline *toAdd = esh_launch_background(currPipe);
+			job_add_new(toAdd);
 		}
 	}
-	esh_signal_unblock(SIGCHLD);
+	
 	return 0;
 }
 
@@ -368,6 +396,7 @@ struct esh_shell shell =
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 int main(int ac, char *av[]) {
+	jobNum = 1;
     int opt;
     list_init(&esh_plugin_list);
 
@@ -389,8 +418,15 @@ int main(int ac, char *av[]) {
     /* saves startup state to return to*/
 	esh_pgrp = getpgrp();
 	eshState = esh_sys_tty_init();
-    
+	
+    /* start SIGCHLD handler for background processes */
 	esh_signal_sethandler(SIGCHLD, &sigchld_handler);
+	
+	/* initialize jobs list variables */
+	job_list = malloc(sizeof(struct list));
+	list_init(job_list);
+	
+	esh_signal_block(SIGCHLD);
 	
     /* Read/eval loop. */
     for (;;) {
@@ -412,11 +448,13 @@ int main(int ac, char *av[]) {
             continue;
         }
         
+        //esh_command_line_print(cline);
+        esh_signal_unblock(SIGCHLD);
+		esh_signal_block(SIGCHLD);
+	
         esh_execute(cline);
-        give_terminal_to(esh_pgrp, eshState);
         //esh_command_line_print(cline);
         //esh_command_line_free(cline);
-        
         
     }
     return 0;

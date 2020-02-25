@@ -14,6 +14,8 @@
 #include "list.h"
 #include "esh.h"
 
+struct list *job_list;
+
 /* Return the list of current jobs */
 struct list * get_jobs(void);
 
