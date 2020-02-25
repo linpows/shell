@@ -15,28 +15,22 @@
 #include "esh.h"
 #include "jobs.h"
 
-/* Return the list of current jobs */
-struct list * get_jobs(void);
+/* checks if command is built in */
+bool is_builtin(char* cmd);
 
-/* Return job corresponding to jid */
-struct esh_pipeline * get_job_from_jid(int jid);
+/* runs built in commands */
+void run_builtin(struct esh_pipeline* pipe);
 
-/* Return job corresponding to pgrp */
-struct esh_pipeline * get_job_from_pgrp(pid_t pgrp);
+/* built-in fg command: fg <jid> */
+void fg_builtin(int jobId);
 
-/* Return process corresponding to pid */
-struct esh_command * get_cmd_from_pid(pid_t pid);
- 
-/* built-in jobs command */
-void builtin_jobs(void);
+/* built-in bg command: bg <jid>*/
+void bg_builtin(int jobId);
 
-/* 
- * Gets job status by pid, stored in pipeline->status
- * removes job from list if terminated
- */
-void job_status(pid_t pid, int status);
+/* built-in kill command: kill <jid>*/
+void kill_builtin(int jobId);
 
-/* prints a job's commands */
-void print_job(struct esh_pipeline *pipe);
+/* built-in stop command: stop <jid> */
+void stop_builtin (int jobId);
 
-#endif //__JOBS_H
+#endif //__BUILTIN_H
