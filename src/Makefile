@@ -9,9 +9,9 @@ CFLAGS=-Wall -Werror -Wmissing-prototypes -g -fPIC
 #YFLAGS=-v
 YACC=bison
 
-LIB_OBJECTS=list.o esh-utils.o esh-sys-utils.o
+LIB_OBJECTS=list.o esh-utils.o esh-sys-utils.o jobs.o
 OBJECTS=esh.o
-HEADERS=list.h esh.h esh-sys-utils.h
+HEADERS=list.h esh.h esh-sys-utils.h jobs.h
 PLUGINDIR=plugins
 PLUGIN_C=$(wildcard $(PLUGINDIR)/*.c)
 PLUGIN_SO=$(patsubst %.c,%.so,$(PLUGIN_C))
