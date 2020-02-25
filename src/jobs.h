@@ -35,7 +35,7 @@ void jobs_builtin(void);
  * Gets job status by pid, stored in pipeline->status
  * removes job from list if terminated
  */
-void job_status(pid_t pid, int status);
+void update_status(pid_t pid, int status);
 
 /* prints a job's commands */
 void print_job(struct esh_pipeline *pipe);

@@ -93,7 +93,7 @@ void jobs_builtin()
  * Gets job status by pid, stored in pipeline->status
  * removes job from list if terminated
  */
-void job_status(pid_t pid, int status)
+void update_status(pid_t pid, int status)
 {
 	if (pid > 0) 
 	{

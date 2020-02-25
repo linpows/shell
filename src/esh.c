@@ -29,7 +29,6 @@ static int job_add_new(struct esh_pipeline *newJob) {
 static void 
 child_status_change(pid_t child, int status, struct esh_pipeline *pipeline)
 {
-	
 	//SIGSTOP CASE
 	if (WIFSTOPPED(status)){
 		
