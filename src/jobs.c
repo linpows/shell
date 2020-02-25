@@ -72,7 +72,7 @@ struct esh_command * get_cmd_from_pid(pid_t pid){
 }
 
 /* built-in jobs command */
-void builtin_jobs()
+void jobs_builtin()
 {
     char *status_strings[] = {"Foreground", "Running", "Stopped", "Needs Terminal"};
     if (!list_empty(&job_list))

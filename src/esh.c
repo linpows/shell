@@ -7,6 +7,7 @@
 
 #include "esh.h"
 #include "jobs.h"
+#include "builtin.h"
 
 /* saves startup state to return to*/
 pid_t esh_pgrp;

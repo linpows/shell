@@ -1,8 +1,8 @@
-#ifndef __JOBS_H
-#define __JOBS_H
+#ifndef __builtin_H
+#define __builtin_H
 
 /*
- * job list functions
+ * builtin functions
  */
  
 #include <sys/wait.h>
@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include "list.h"
 #include "esh.h"
+#include "jobs.h"
 
 /* Return the list of current jobs */
 struct list * get_jobs(void);
@@ -27,7 +28,7 @@ struct esh_pipeline * get_job_from_pgrp(pid_t pgrp);
 struct esh_command * get_cmd_from_pid(pid_t pid);
  
 /* built-in jobs command */
-void jobs_builtin(void);
+void builtin_jobs(void);
 
 /* 
  * Gets job status by pid, stored in pipeline->status
