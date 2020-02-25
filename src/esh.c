@@ -11,34 +11,6 @@
 pid_t esh_pgrp;
 struct termios* eshState;
 
-
-/**
- * SIGCHLD handler.
- * Call waitpid() to learn about any child processes that
- * have exited or changed status (been stopped, needed the
- * terminal, etc.)
- * Just record the information by updating the job list
- * data structures.  Since the call may be spurious (e.g.
- * an already pending SIGCHLD is delivered even though
- * a foreground process was already reaped), ignore when
- * waitpid returns -1.
- * Use a loop with WNOHANG since only a single SIGCHLD
- * signal may be delivered for multiple children that have
- * exited.
- * COMMENTED OUT FOR THE TIME BEING
-static void sigchld_handler(int sig, siginfo_t *info, void *_ctxt)
-{
-    pid_t child;
-    int status;
-
-    assert(sig == SIGCHLD);
-
-    while ((child = waitpid(-1, &status, WUNTRACED|WNOHANG)) > 0) {
-        child_status_change(child, status);
-    }
-}
-*/
-
 /**
  * removes terminated and interrupted processes from pipeline
  * 
@@ -52,7 +24,7 @@ static void child_status_change(pid_t child, int status, struct esh_pipeline *pi
 		printf("\n");	
 		printf("Process Stopped\n"); // ADD JOBS STOPPED PROCESS OUTPUT
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^
-		//add to jobs list
+		//add to jobs list 
 	}
 	//SIGCHLD and SIGINT case
 	else {
@@ -78,15 +50,38 @@ static void child_status_change(pid_t child, int status, struct esh_pipeline *pi
 		list_remove(remove);
 		//free(removed);
 	}
-	/*
-	else {
-		perror("unknown child Status: ");
-	}*/
-	
 }
 
 
-/* Wait for all processes in this pipeline to complete, or for
+/**
+ * SIGCHLD handler. FOR BACKGROUND PROCESSES
+ * Call waitpid() to learn about any child processes that
+ * have exited or changed status (been stopped, needed the
+ * terminal, etc.)
+ * Just record the information by updating the job list
+ * data structures.  Since the call may be spurious (e.g.
+ * an already pending SIGCHLD is delivered even though
+ * a foreground process was already reaped), ignore when
+ * waitpid returns -1.
+ * Use a loop with WNOHANG since only a single SIGCHLD
+ * signal may be delivered for multiple children that have
+ * exited.
+ */
+static void sigchld_handler(int sig, siginfo_t *info, void *_ctxt)
+{
+    pid_t child;
+    int status;
+
+    assert(sig == SIGCHLD);
+
+    while ((child = waitpid(-1, &status, WUNTRACED|WNOHANG)) > 0) {
+		esh_signal_block(SIGCHLD);
+        child_status_change(child, status, get_cmd_from_pid(child)->pipeline);
+        esh_signal_unblock(SIGCHLD);
+    }
+}
+
+/** Wait for all processes in this pipeline to complete, or for
  * the pipeline's process group to no longer be the foreground
  * process group.
  * You should call this function from a) where you wait for
@@ -148,13 +143,14 @@ static void give_terminal_to(pid_t pgrp, struct termios *pg_tty_state)
  */
 static int esh_launch_background(struct esh_pipeline *pipe){
 	struct list_elem *e;
-	esh_signal_block(SIGCHLD);
-	
+	bool has_set_pipe_pgrp = false;
 	//set status
 	
-	//create a terminal object for pipeline;
-	esh_sys_tty_save((& pipe->saved_tty_state));
-	bool has_set_pipe_pgrp = false;
+	//create a terminal object for pipeline if it has not already been made
+	if(!pipe->pgrpset) {
+		esh_sys_tty_save((& pipe->saved_tty_state));
+	}
+	
 	
 	pid_t c_pid;
 	for (e = list_begin(&pipe->commands); e != list_end(&pipe->commands); e = list_next(e)) 
@@ -170,18 +166,17 @@ static int esh_launch_background(struct esh_pipeline *pipe){
 			if(has_set_pipe_pgrp == false){
 				//initialize project group for entire pipeline
 				pipe->pgrp = currCommand->pid;
-				give_terminal_to(pipe->pgrp, (& pipe->saved_tty_state));
 			}
 			
 			//set individual process groups
 			if(setpgid(0, pipe->pgrp) < 0){
-				perror("child setting process group Error");
+				perror("(background) child setting process group Error");
 			}
 			
 			//execute here
 			esh_signal_unblock(SIGCHLD);
 			if (execvp(currCommand->argv[0], currCommand->argv) == -1) {
-				perror("process failed execution");
+				perror("background process failed execution");
 			}
 			exit(EXIT_FAILURE);
 		}
@@ -202,16 +197,9 @@ static int esh_launch_background(struct esh_pipeline *pipe){
 			}
 			
 			currCommand->pid = c_pid;
-			
-			//printf("%d : pipe group id\n%d esh group id:\n", c_pid, getpgrp());
-			
 		}
 	}
-	give_terminal_to(c_pid, (& pipe->saved_tty_state));
-	//wait for all forked jobs and update child status
-	wait_for_job(pipe);
-	
-	esh_signal_unblock(SIGCHLD);
+	//ADD TO JOBS LIST HERE~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	return 0;
 }
 
@@ -220,9 +208,6 @@ static int esh_launch_background(struct esh_pipeline *pipe){
  */
 static int esh_launch_foreground(struct esh_pipeline *pipe){
 	struct list_elem *e;
-	esh_signal_block(SIGCHLD);
-	
-	//set status
 	
 	//create a terminal object for pipeline;
 	esh_sys_tty_save((& pipe->saved_tty_state));
@@ -283,7 +268,7 @@ static int esh_launch_foreground(struct esh_pipeline *pipe){
 	//wait for all forked jobs and update child status
 	wait_for_job(pipe);
 	
-	esh_signal_unblock(SIGCHLD);
+	
 	return 0;
 }
 
@@ -294,6 +279,7 @@ static int esh_launch_foreground(struct esh_pipeline *pipe){
  */
 static int esh_execute(struct esh_command_line *rline){
 	struct list_elem *e;
+	esh_signal_block(SIGCHLD);
 	//### IMPLEMENT JOB ID HANDLING HERE
 	for (e = list_begin(&rline->pipes); e != list_end(&rline->pipes); e = list_next(e)) 
 	{
@@ -308,9 +294,10 @@ static int esh_execute(struct esh_command_line *rline){
 		else {
 			//BG job
 			currPipe->status = BACKGROUND;
+			esh_launch_background(currPipe);
 		}
 	}
-	
+	esh_signal_unblock(SIGCHLD);
 	return 0;
 }
 
@@ -403,7 +390,8 @@ int main(int ac, char *av[]) {
 	esh_pgrp = getpgrp();
 	eshState = esh_sys_tty_init();
     
-
+	esh_signal_sethandler(SIGCHLD, &sigchld_handler);
+	
     /* Read/eval loop. */
     for (;;) {
         /* Do not output a prompt unless shell's stdin is a terminal */
