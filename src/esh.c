@@ -120,7 +120,7 @@ static void sigchld_handler(int sig, siginfo_t *info, void *_ctxt)
  * terminated.  If you use a different approach to keep
  * track of commands, adjust the code accordingly.
  */
-static void wait_for_job(struct esh_pipeline *pipeline)
+void wait_for_job(struct esh_pipeline *pipeline)
 {
     assert(esh_signal_is_blocked(SIGCHLD));
 
@@ -149,7 +149,7 @@ static void wait_for_job(struct esh_pipeline *pipeline)
  * sane terminal state (obtained on startup via
  * esh_sys_tty_init()).
  */
-static void give_terminal_to(pid_t pgrp, struct termios *pg_tty_state)
+void give_terminal_to(pid_t pgrp, struct termios *pg_tty_state)
 {
     esh_signal_block(SIGTTOU);
     int rc = tcsetpgrp(esh_sys_tty_getfd(), pgrp);
