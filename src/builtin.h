@@ -15,6 +15,9 @@
 #include "esh.h"
 #include "jobs.h"
 
+/* forward declaration (compiler warning)*/
+struct esh_pipeline;
+
 /* checks if command is built in */
 bool is_builtin(char* cmd);
 
