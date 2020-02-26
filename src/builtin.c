@@ -63,7 +63,7 @@ void fg_builtin(int jobId)
 		}
 
 		//move to foreground
-		pipe->status = FOREGROUND;
+		//pipe->status = FOREGROUND;
 		pipe->bg_job = false;
 
 		//print_job(pipe);
