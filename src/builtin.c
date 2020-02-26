@@ -62,7 +62,7 @@ void fg_builtin(int jobId)
 
     //move to foreground
     pipe->status = FOREGROUND;
-    pipe->bg_job = FALSE;
+    pipe->bg_job = false;
 
     print_job(pipe);  
 
@@ -78,7 +78,7 @@ void bg_builtin(int jobId)
     pipe = get_job_from_jid(jobId);
 
     pipe->status = BACKGROUND;
-    pipe->bg_job = TRUE;
+    pipe->bg_job = true;
     kill(pipe->pgrp, SIGCONT);
 
     //Save state
