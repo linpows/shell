@@ -306,9 +306,16 @@ static int esh_execute(struct esh_command_line *rline){
 		e = list_pop_front(&rline->pipes);
 		
 		struct esh_pipeline *currPipe = 
-			list_entry (e, struct esh_pipeline, elem);
+			list_entry(e, struct esh_pipeline, elem);
 		
-		if(!currPipe->bg_job) {
+		struct list_elem *c = list_begin(&currPipe->commands);
+		struct esh_command *cmd = list_entry(c, struct esh_command, elem);
+			
+		if(is_builtin(cmd->arg[0]))
+		{
+			run_builtin(currPipe);
+		}
+		else if(!currPipe->bg_job) {
 			//foreground jobs
 			currPipe->status = FOREGROUND;
 			esh_launch_foreground(currPipe);
