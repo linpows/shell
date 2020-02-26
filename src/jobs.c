@@ -21,7 +21,7 @@ struct esh_pipeline * get_job_from_jid(int jid)
     {
         struct esh_pipeline *pipe= list_entry(e, struct esh_pipeline, elem);
 
-        if (pipeE->jid == jid)
+        if (pipe->jid == jid)
         {
             return pipe;
         }
@@ -128,9 +128,9 @@ void remove_job(int jid)
 
     for (e  = list_begin(job_list); e != list_end(job_list); e = list_next(e))
     {
-        struct esh_pipeline *pipeE= list_entry(e, struct esh_pipeline, elem);
+        struct esh_pipeline *pipe= list_entry(e, struct esh_pipeline, elem);
 
-        if (pipeE->jid == jid)
+        if (pipe->jid == jid)
         {
             toRemove = e;
         }
