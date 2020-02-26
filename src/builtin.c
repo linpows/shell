@@ -26,19 +26,19 @@ void run_builtin(struct esh_pipeline* pipe)
     }
     if (strncmp(cmd->argv[0], "fg", 2) == 0)
     {
-        fg_builtin(cmd->argv[1]);
+        fg_builtin(atoi(cmd->argv[1]));
     }
     if (strncmp(cmd->argv[0], "bg", 2) == 0)
     {
-        bg_builtin(cmd->argv[1]);
+        bg_builtin(atoi(cmd->argv[1]));
     }
     if (strncmp(cmd->argv[0], "kill", 4) == 0)
     {
-        kill_builtin(cmd->argv[1]);
+        kill_builtin(atoi(cmd->argv[1]));
     }
     if (strncmp(cmd->argv[0], "stop", 4) == 0)
     {
-        stop_builtin(cmd->argv[1]);
+        stop_builtin(atoi(cmd->argv[1]));
     }
 }
 
@@ -52,7 +52,7 @@ void fg_builtin(int jobId)
     pipe = get_job_from_jid(jobId);
 
     // give term
-    give_term_control(pipe->pgrp, &pipe->saved_tty_state);
+    give_terminal_to(pipe->pgrp, &pipe->saved_tty_state);
 
     //continue if stopped
     if (pipe->status == STOPPED)
@@ -66,7 +66,7 @@ void fg_builtin(int jobId)
     print_job(pipe);  
 
     //wait
-    wait_on_job(pipe->pgrp, &pipe->saved_tty_state);
+    wait_for_job(pipe->pgrp, &pipe->saved_tty_state);
     esh_signal_unblock(SIGCHLD);    
 }
 
