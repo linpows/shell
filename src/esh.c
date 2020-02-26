@@ -27,14 +27,21 @@ static int job_add_new(struct esh_pipeline *newJob) {
 static void 
 child_status_change(pid_t child, int status, struct esh_pipeline *pipeline)
 {
+	
 	//SIGSTOP CASE
-	if (WIFSTOPPED(status)){
+	if (WIFSTOPPED(status) ){
 		
-		pipeline->status = STOPPED;
+		
 		//printf("\n");	
 		//add to jobs list and print formatted output
-		
-		//print_job(get_job_from_jid(job_add_new(pipeline)));
+		if (pipeline->status == FOREGROUND){
+			pipeline->status = STOPPED;
+			print_job(get_job_from_jid(job_add_new(pipeline)));
+		}
+		else {
+			pipeline->status = STOPPED;
+			print_job(pipeline);
+		}
 		/*
 		printf("Process Stopped\n"); // ADD JOBS STOPPED PROCESS OUTPUT
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^
@@ -44,9 +51,7 @@ child_status_change(pid_t child, int status, struct esh_pipeline *pipeline)
 	}
 	//SIGCHLD and SIGINT case
 	else {
-		if (WIFSIGNALED(status)){
-			//printf("\n");
-		}
+		
 		struct list_elem *e;
 		struct list_elem *remove;
 		
