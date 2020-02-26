@@ -66,7 +66,7 @@ void fg_builtin(int jobId)
     print_job(pipe);  
 
     //wait
-    wait_for_job(pipe->pgrp, &pipe->saved_tty_state);
+    wait_for_job(pipe);
     esh_signal_unblock(SIGCHLD);    
 }
 
