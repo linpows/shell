@@ -40,6 +40,10 @@ struct esh_command;
 struct esh_pipeline;
 struct esh_command_line;
 
+/* saves startup state to return to*/
+pid_t esh_pgrp;
+struct termios* eshState;
+
 /*
  * A esh_shell object allows plugins to access services and information. 
  * The shell object should support the following operations.
@@ -230,10 +234,15 @@ extern struct list esh_plugin_list;
  * START: ~NEW FUCTIONS
  * _____________________________________/
  */
-//void give_terminal_to(pid_t pgrp, struct termios *pg_tty_state);
-//static void wait_for_job(struct esh_pipeline *pipeline);
+ 
+ /* terminal control function */
+void give_terminal_to(pid_t pgrp, struct termios *pg_tty_state);
+
+/* waits for job termination */
+void wait_for_job(struct esh_pipeline *pipeline);
+
 //void sigchld_handler(int sig, siginfo_t *info, void *_ctxt);
-//static int esh_launch_foreground(struct esh_pipeline* pipe);
+//int esh_launch_foreground(struct esh_pipeline* pipe);
 //static int esh_execute(struct esh_command_line* rline);
  /*________________________________________/
  * END: ~NEW FUCTIONS

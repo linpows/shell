@@ -31,13 +31,10 @@ struct esh_command * get_cmd_from_pid(pid_t pid);
 /* built-in jobs command */
 void jobs_builtin(void);
 
-/* 
- * Gets job status by pid, stored in pipeline->status
- * removes job from list if terminated
- */
-void job_status(pid_t pid, int status);
-
 /* prints a job's commands */
 void print_job(struct esh_pipeline *pipe);
+
+/* removes job with jid */
+void remove_job(int jid);
 
 #endif //__JOBS_H

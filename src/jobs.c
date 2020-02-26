@@ -19,11 +19,11 @@ struct esh_pipeline * get_job_from_jid(int jid)
 
     for (e  = list_begin(job_list); e != list_end(job_list); e = list_next(e))
     {
-        struct esh_pipeline *pipeE= list_entry(e, struct esh_pipeline, elem);
+        struct esh_pipeline *pipe= list_entry(e, struct esh_pipeline, elem);
 
-        if (pipeE->jid == jid)
+        if (pipe->jid == jid)
         {
-            return pipeE;
+            return pipe;
         }
     }
     return NULL;
@@ -77,61 +77,15 @@ void jobs_builtin()
     char *status_strings[] = {"Foreground", "Running", "Stopped", "Needs Terminal"};
     if (!list_empty(job_list))
     {
-        struct list_elem * e = list_begin(job_list);
+        struct list_elem * e = list_rbegin(job_list);
         struct esh_pipeline * job;
 
-        for (job = list_entry(e, struct esh_pipeline, elem); e != list_end(job_list); e = list_next(e))
+        for (job = list_entry(e, struct esh_pipeline, elem); e != list_rend(job_list); e = list_prev(e))
         {
 			job = list_entry(e, struct esh_pipeline, elem);
-            printf("[%d]     %s",job->jid, status_strings[job->status]);
+            printf("[%d] %s ",job->jid, status_strings[job->status]);
             print_job(job);
         }
-    }
-}
-
-/* 
- * Gets job status by pid, stored in pipeline->status
- * removes job from list if terminated
- */
-void job_status(pid_t pid, int status)
-{
-	if (pid > 0) 
-	{
-		struct list_elem *e;
-        for (e = list_begin(job_list); e != list_end(job_list); e = list_next(e)) 
-        {
-			struct esh_pipeline *pipeline = list_entry(e, struct esh_pipeline, elem);
-
-			if (pipeline->pgrp == pid)
-			{
-				// process stopped
-				if (WIFSTOPPED(status)) 
-                {
-                    pipeline->status = STOPPED;
-                    printf("[%d]     Stopped     ", pipeline->jid);
-                    print_job(pipeline);
-                }
-				// process killed
-                if (WTERMSIG(status) == 9) 
-                {
-                    list_remove(e);
-                }
-                // process exited
-                else if (WIFEXITED(status))
-                {
-                    list_remove(e);
-                }
-				// unhandled signal
-                else if (WIFSIGNALED(status))
-                {
-                    list_remove(e);
-                }
-            }
-        }
-    }
-    else if (pid < 0)
-    {
-        esh_sys_fatal_error("Error waiting for process");
     }
 }
 
@@ -145,16 +99,42 @@ void print_job(struct esh_pipeline *pipe)
         struct esh_command *cmd = list_entry(e, struct esh_command, elem);
 
         char **argv = cmd->argv;
+        printf("%s", *argv);
+        argv++;
         while (*argv) {
-            printf("%s ", *argv);
+            printf(" %s", *argv);
             argv++;
         }
         //if there is more than one command
         if (1 < list_size(&pipe->commands))
         {
-            printf("| ");
+            printf(" | ");
         }
     }
+    
+    if(pipe->bg_job) 
+    {
+		printf(" &");
+	}
 
     printf(")\n");
+}
+
+/* removes job with jid */
+void remove_job(int jid)
+{
+	struct list_elem * e;
+	struct list_elem * toRemove;
+
+    for (e  = list_begin(job_list); e != list_end(job_list); e = list_next(e))
+    {
+        struct esh_pipeline *pipe= list_entry(e, struct esh_pipeline, elem);
+
+        if (pipe->jid == jid)
+        {
+            toRemove = e;
+        }
+    }
+    
+    list_remove(toRemove);
 }

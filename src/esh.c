@@ -8,8 +8,7 @@
 #include "esh.h"
 
 /* saves startup state to return to*/
-pid_t esh_pgrp;
-struct termios* eshState;
+
 int jobNum;
 
 
