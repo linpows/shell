@@ -83,7 +83,7 @@ void jobs_builtin()
         for (job = list_entry(e, struct esh_pipeline, elem); e != list_end(job_list); e = list_next(e))
         {
 			job = list_entry(e, struct esh_pipeline, elem);
-            printf("[%d]     %s",job->jid, status_strings[job->status]);
+            printf("[%d] %s ",job->jid, status_strings[job->status]);
             print_job(job);
         }
     }
@@ -146,15 +146,20 @@ void print_job(struct esh_pipeline *pipe)
 
         char **argv = cmd->argv;
         while (*argv) {
-            printf("%s ", *argv);
+            printf("%s", *argv);
             argv++;
         }
         //if there is more than one command
         if (1 < list_size(&pipe->commands))
         {
-            printf("| ");
+            printf(" | ");
         }
     }
+    
+    if(pipe->status == 1) 
+    {
+		printf(" &");
+	}
 
     printf(")\n");
 }
