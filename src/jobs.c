@@ -179,5 +179,4 @@ void remove_job(int jid)
             list_remove(e);
         }
     }
-    return NULL;
 }
