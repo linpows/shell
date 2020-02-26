@@ -22,23 +22,23 @@ void run_builtin(struct esh_pipeline* pipe)
 
     if (strncmp(cmd->argv[0], "jobs", 4) == 0)
     {
-        builtin_jobs();
+        jobs_builtin();
     }
     if (strncmp(cmd->argv[0], "fg", 2) == 0)
     {
-        fg_builtin(cmd-argv[1]);
+        fg_builtin(cmd->argv[1]);
     }
     if (strncmp(cmd->argv[0], "bg", 2) == 0)
     {
-        bg_builtin(cmd-argv[1]);
+        bg_builtin(cmd->argv[1]);
     }
     if (strncmp(cmd->argv[0], "kill", 4) == 0)
     {
-        kill_builtin(cmd-argv[1]);
+        kill_builtin(cmd->argv[1]);
     }
     if (strncmp(cmd->argv[0], "stop", 4) == 0)
     {
-        stop_builtin(cmd-argv[1]);
+        stop_builtin(cmd->argv[1]);
     }
 }
 
