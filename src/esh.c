@@ -33,11 +33,11 @@ child_status_change(pid_t child, int status, struct esh_pipeline *pipeline)
 	//SIGSTOP CASE
 	if (WIFSTOPPED(status)){
 		
-		pipeline->status = BACKGROUND;
-		printf("\n");	
+		pipeline->status = STOPPED;
+		//printf("\n");	
 		//add to jobs list and print formatted output
 		
-		print_job(get_job_from_jid(job_add_new(pipeline)));
+		//print_job(get_job_from_jid(job_add_new(pipeline)));
 		/*
 		printf("Process Stopped\n"); // ADD JOBS STOPPED PROCESS OUTPUT
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^
@@ -48,7 +48,7 @@ child_status_change(pid_t child, int status, struct esh_pipeline *pipeline)
 	//SIGCHLD and SIGINT case
 	else {
 		if (WIFSIGNALED(status)){
-			printf("\n");
+			//printf("\n");
 		}
 		struct list_elem *e;
 		struct list_elem *remove;
