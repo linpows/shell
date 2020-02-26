@@ -227,10 +227,10 @@ extern struct list esh_plugin_list;
  * START: ~NEW FUCTIONS
  * _____________________________________/
  */
-void give_terminal_to(pid_t pgrp, struct termios *pg_tty_state);
-void wait_for_job(struct esh_pipeline *pipeline);
+static void give_terminal_to(pid_t pgrp, struct termios *pg_tty_state);
+static void wait_for_job(struct esh_pipeline *pipeline);
 //void sigchld_handler(int sig, siginfo_t *info, void *_ctxt);
-int esh_launch_foreground(struct esh_pipeline* pipe);
+static int esh_launch_foreground(struct esh_pipeline* pipe);
 //static int esh_execute(struct esh_command_line* rline);
  /*________________________________________/
  * END: ~NEW FUCTIONS
