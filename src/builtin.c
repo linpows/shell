@@ -64,8 +64,7 @@ void fg_builtin(int jobId)
     pipe->status = FOREGROUND;
     pipe->bg_job = false;
 
-    print_job(pipe);
-    printf("%d\n", pipe->pgrp);
+    //print_job(pipe);
 
     //wait
     wait_for_job(pipe);
@@ -112,5 +111,4 @@ void stop_builtin (int jobId)
     char *status_strings[] = {"Foreground", "Running", "Stopped", "Needs Terminal"};
     printf("[%d] %s ",pipe->jid, status_strings[pipe->status]);
     print_job(pipe);
-    printf("%d\n", pipe->pgrp);
 }
