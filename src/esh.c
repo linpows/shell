@@ -18,6 +18,7 @@ static int job_add_new(struct esh_pipeline *newJob) {
 	newJob->jid = jobNum;
 	
 	list_push_front(job_list, &(newJob->elem));
+	jobNum++;
 	return newJob->jid;
 }
 
