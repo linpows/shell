@@ -51,24 +51,27 @@ void fg_builtin(int jobId)
     struct esh_pipeline *pipe;
     pipe = get_job_from_jid(jobId);
 
-    // give term
-    give_terminal_to(pipe->pgrp, &pipe->saved_tty_state);
-
-    //continue if stopped
-    if (pipe->status == STOPPED)
+	if (pipe != NULL)
     {
-        kill(pipe->pgrp, SIGCONT);
-    }
+		// give term
+		give_terminal_to(pipe->pgrp, &pipe->saved_tty_state);
 
-    //move to foreground
-    pipe->status = FOREGROUND;
-    pipe->bg_job = false;
+		//continue if stopped
+		if (pipe->status == STOPPED)
+		{
+			kill(pipe->pgrp, SIGCONT);
+		}
 
-    //print_job(pipe);
+		//move to foreground
+		//pipe->status = FOREGROUND;
+		pipe->bg_job = false;
 
-    //wait
-    wait_for_job(pipe);
-    give_terminal_to(esh_pgrp, eshState);
+		//print_job(pipe);
+
+		//wait
+		wait_for_job(pipe);
+		give_terminal_to(esh_pgrp, eshState);
+	}
     esh_signal_unblock(SIGCHLD);    
 }
 
@@ -78,14 +81,17 @@ void bg_builtin(int jobId)
     struct esh_pipeline *pipe;
     pipe = get_job_from_jid(jobId);
 
-    pipe->status = BACKGROUND;
-    pipe->bg_job = true;
-    kill(pipe->pgrp, SIGCONT);
+	if (pipe != NULL)
+    {
+		pipe->status = BACKGROUND;
+		pipe->bg_job = true;
+		kill(pipe->pgrp, SIGCONT);
 
-    //Save state
-    esh_sys_tty_save(&pipe->saved_tty_state);
-	
-    //print_job(pipe);
+		//Save state
+		esh_sys_tty_save(&pipe->saved_tty_state);
+		
+		//print_job(pipe);
+	}
 }
 
 /* built-in kill command: kill <jid>*/
@@ -106,9 +112,12 @@ void stop_builtin (int jobId)
     struct esh_pipeline *pipe;
     pipe = get_job_from_jid(jobId);
 
-    kill(pipe->pgrp, SIGSTOP);
-    pipe->status = STOPPED;
-    char *status_strings[] = {"Foreground", "Running", "Stopped", "Needs Terminal"};
-    printf("[%d] %s ",pipe->jid, status_strings[pipe->status]);
-    print_job(pipe);
+	if(pipe != NULL) 
+	{
+		kill(pipe->pgrp, SIGSTOP);
+		pipe->status = STOPPED;
+		char *status_strings[] = {"Foreground", "Running", "Stopped", "Needs Terminal"};
+		printf("[%d] %s ",pipe->jid, status_strings[pipe->status]);
+		print_job(pipe);
+	}
 }
