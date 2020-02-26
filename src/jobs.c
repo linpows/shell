@@ -77,14 +77,15 @@ void jobs_builtin()
     char *status_strings[] = {"Foreground", "Running", "Stopped", "Needs Terminal"};
     if (!list_empty(job_list))
     {
-        struct list_elem * e = list_begin(job_list);
+        struct list_elem * e = list_rbegin(job_list);
         struct esh_pipeline * job;
 
-        for (job = list_entry(e, struct esh_pipeline, elem); e != list_end(job_list); e = list_next(e))
+        for (job = list_entry(e, struct esh_pipeline, elem); e != list_rend(job_list); e = list_prev(e))
         {
 			job = list_entry(e, struct esh_pipeline, elem);
             printf("[%d] %s ",job->jid, status_strings[job->status]);
             print_job(job);
+            printf("test");
         }
     }
 }
@@ -145,6 +146,7 @@ void print_job(struct esh_pipeline *pipe)
         struct esh_command *cmd = list_entry(e, struct esh_command, elem);
 
         char **argv = cmd->argv;
+        argv++;
         printf("%s", *argv);
         while (*argv) {
             printf(" %s", *argv);
