@@ -64,10 +64,12 @@ void fg_builtin(int jobId)
     pipe->status = FOREGROUND;
     pipe->bg_job = false;
 
-    print_job(pipe);  
+    print_job(pipe);
+    printf(pipe->pgrp);
 
     //wait
     wait_for_job(pipe);
+    give_terminal_to(esh_pgrp, eshState);
     esh_signal_unblock(SIGCHLD);    
 }
 
@@ -83,8 +85,8 @@ void bg_builtin(int jobId)
 
     //Save state
     esh_sys_tty_save(&pipe->saved_tty_state);
-
-    print_job(pipe);
+	
+    //print_job(pipe);
 }
 
 /* built-in kill command: kill <jid>*/
@@ -107,5 +109,6 @@ void stop_builtin (int jobId)
 
     kill(pipe->pgrp, SIGSTOP);
     pipe->status = STOPPED;
-    printf("Stopped job: [%d]\n", pipe->jid);
+    printf("[%d] %s ",job->jid, status_strings[job->status]);
+    print_job(pipe);
 }

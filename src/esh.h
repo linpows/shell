@@ -37,6 +37,10 @@ struct esh_command;
 struct esh_pipeline;
 struct esh_command_line;
 
+/* saves startup state to return to*/
+pid_t esh_pgrp;
+struct termios* eshState;
+
 /*
  * A esh_shell object allows plugins to access services and information. 
  * The shell object should support the following operations.
