@@ -40,4 +40,7 @@ void update_status(pid_t pid, int status);
 /* prints a job's commands */
 void print_job(struct esh_pipeline *pipe);
 
+/* removes job with jid */
+void remove_job(int jid);
+
 #endif //__JOBS_H

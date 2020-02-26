@@ -145,8 +145,9 @@ void print_job(struct esh_pipeline *pipe)
         struct esh_command *cmd = list_entry(e, struct esh_command, elem);
 
         char **argv = cmd->argv;
+        printf("%s", *argv);
         while (*argv) {
-            printf("%s", *argv);
+            printf(" %s", *argv);
             argv++;
         }
         //if there is more than one command
@@ -156,10 +157,27 @@ void print_job(struct esh_pipeline *pipe)
         }
     }
     
-    if(pipe->status == 1) 
+    if(pipe->bg_job) 
     {
 		printf(" &");
 	}
 
     printf(")\n");
+}
+
+/* removes job with jid */
+void remove_job(int jid)
+{
+	struct list_elem * e;
+
+    for (e  = list_begin(job_list); e != list_end(job_list); e = list_next(e))
+    {
+        struct esh_pipeline *pipeE= list_entry(e, struct esh_pipeline, elem);
+
+        if (pipeE->jid == jid)
+        {
+            list_remove(e);
+        }
+    }
+    return NULL;
 }

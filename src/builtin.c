@@ -62,6 +62,7 @@ void fg_builtin(int jobId)
 
     //move to foreground
     pipe->status = FOREGROUND;
+    pipe->bg_job = FALSE;
 
     print_job(pipe);  
 
@@ -77,6 +78,7 @@ void bg_builtin(int jobId)
     pipe = get_job_from_jid(jobId);
 
     pipe->status = BACKGROUND;
+    pipe->bg_job = TRUE;
     kill(pipe->pgrp, SIGCONT);
 
     //Save state
@@ -93,6 +95,7 @@ void kill_builtin(int jobId)
     if (pipe != NULL)
     {
         kill(pipe->pgrp, SIGKILL); //SIGTERM?
+        remove_job(jobId);
         printf("Killed job: [%d]\n", jobId);
     }
 }
@@ -104,5 +107,6 @@ void stop_builtin (int jobId)
     pipe = get_job_from_jid(jobId);
 
     kill(pipe->pgrp, SIGSTOP);
+    pipe->status = STOPPED;
     printf("Stopped job: [%d]", jobId);
 }
