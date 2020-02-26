@@ -19,11 +19,11 @@ struct esh_pipeline * get_job_from_jid(int jid)
 
     for (e  = list_begin(job_list); e != list_end(job_list); e = list_next(e))
     {
-        struct esh_pipeline *pipeE= list_entry(e, struct esh_pipeline, elem);
+        struct esh_pipeline *pipe= list_entry(e, struct esh_pipeline, elem);
 
         if (pipeE->jid == jid)
         {
-            return pipeE;
+            return pipe;
         }
     }
     return NULL;
@@ -89,52 +89,6 @@ void jobs_builtin()
     }
 }
 
-/* 
- * Gets job status by pid, stored in pipeline->status
- * removes job from list if terminated
- */
-void update_status(pid_t pid, int status)
-{
-	if (pid > 0) 
-	{
-		struct list_elem *e;
-        for (e = list_begin(job_list); e != list_end(job_list); e = list_next(e)) 
-        {
-			struct esh_pipeline *pipeline = list_entry(e, struct esh_pipeline, elem);
-
-			if (pipeline->pgrp == pid)
-			{
-				// process stopped
-				if (WIFSTOPPED(status)) 
-                {
-                    pipeline->status = STOPPED;
-                    printf("[%d]     Stopped     ", pipeline->jid);
-                    print_job(pipeline);
-                }
-				// process killed
-                if (WTERMSIG(status) == 9) 
-                {
-                    list_remove(e);
-                }
-                // process exited
-                else if (WIFEXITED(status))
-                {
-                    list_remove(e);
-                }
-				// unhandled signal
-                else if (WIFSIGNALED(status))
-                {
-                    list_remove(e);
-                }
-            }
-        }
-    }
-    else if (pid < 0)
-    {
-        esh_sys_fatal_error("Error waiting for process");
-    }
-}
-
 /* prints a job's commands */
 void print_job(struct esh_pipeline *pipe)
 {
@@ -170,6 +124,7 @@ void print_job(struct esh_pipeline *pipe)
 void remove_job(int jid)
 {
 	struct list_elem * e;
+	struct list_elem * toRemove;
 
     for (e  = list_begin(job_list); e != list_end(job_list); e = list_next(e))
     {
@@ -177,7 +132,9 @@ void remove_job(int jid)
 
         if (pipeE->jid == jid)
         {
-            list_remove(e);
+            toRemove = e;
         }
     }
+    
+    list_remove(toRemove);
 }

@@ -108,5 +108,5 @@ void stop_builtin (int jobId)
 
     kill(pipe->pgrp, SIGSTOP);
     pipe->status = STOPPED;
-    printf("Stopped job: [%d]", jobId);
+    printf("Stopped job: [%d]\n", pipe->jid);
 }
