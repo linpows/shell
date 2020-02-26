@@ -19,7 +19,7 @@
 bool is_builtin(char* cmd);
 
 /* runs built in commands */
-void run_builtin(struct esh_pipeline* pipe);
+void run_builtin(struct esh_pipeline *pipe);
 
 /* built-in fg command: fg <jid> */
 void fg_builtin(int jobId);
