@@ -65,7 +65,7 @@ void fg_builtin(int jobId)
     pipe->bg_job = false;
 
     print_job(pipe);
-    printf(pipe->pgrp);
+    printf("%d\n", pipe->pgrp);
 
     //wait
     wait_for_job(pipe);
@@ -109,6 +109,6 @@ void stop_builtin (int jobId)
 
     kill(pipe->pgrp, SIGSTOP);
     pipe->status = STOPPED;
-    printf("[%d] %s ",job->jid, status_strings[job->status]);
+    printf("[%d] %s ",pipe->jid, status_strings[job->status]);
     print_job(pipe);
 }
