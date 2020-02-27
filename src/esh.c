@@ -14,7 +14,7 @@ int jobNum;
 
 /* adds a new job to the list*/
 static int job_add_new(struct esh_pipeline *newJob) {
-	if(list_empty(job_list) 
+	if(list_empty(job_list))
 	{
 		jobNum = 1;
 	}
