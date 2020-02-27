@@ -24,7 +24,7 @@ void run_builtin(struct esh_pipeline* pipe)
     {
         jobs_builtin();
     }
-    else if (strncmp(cmd->argv[0], "fg", 2) == 0)
+    else if (strncmp(cmd->argv[0], "fg", 2) == 0 && cmd->argv)
     {
         fg_builtin(atoi(cmd->argv[1]));
     }
@@ -53,12 +53,15 @@ void fg_builtin(int jobId)
     {
 		pipe->bg_job = false;
 
-		print_job(pipe);
+		/*print_job(pipe);
 		printf("\n");
-		sleep(2);
+		sleep(2);*/
 		
 		// give term
-		give_terminal_to(pipe->pgrp, &pipe->saved_tty_state);
+		if(print_job(pipe)) {
+			printf("\n");
+			give_terminal_to(pipe->pgrp, &pipe->saved_tty_state);
+		}
 
 		//continue if stopped
 		if (pipe->status == STOPPED)
@@ -72,9 +75,10 @@ void fg_builtin(int jobId)
 		//wait
 		esh_signal_block(SIGCHLD);
 		wait_for_job(pipe);
-		esh_signal_unblock(SIGCHLD);    
+		esh_signal_unblock(SIGCHLD);  
+		  
+		give_terminal_to(esh_pgrp, eshState);
 	}
-	give_terminal_to(esh_pgrp, eshState);
 }
 
 /* built-in bg command: bg <jid>*/
@@ -118,9 +122,5 @@ void stop_builtin (int jobId)
 	{
 		kill(pipe->pgrp, SIGSTOP);
 		pipe->status = STOPPED;
-		char *status_strings[] = {"Foreground", "Running", "Stopped", "Needs Terminal"};
-		printf("[%d] %s (",pipe->jid, status_strings[pipe->status]);
-		print_job(pipe);
-		printf(")\n");
 	}
 }
