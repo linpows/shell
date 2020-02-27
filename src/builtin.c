@@ -102,7 +102,7 @@ void kill_builtin(int jobId)
     if (pipe != NULL)
     {
         kill(pipe->pgrp, SIGKILL); //SIGTERM?
-        printf("Killed job: [%d]\n", pipe->jid);
+        //printf("Killed job: [%d]\n", pipe->jid);
     }
 }
 

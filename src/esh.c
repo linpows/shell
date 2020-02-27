@@ -478,7 +478,7 @@ static int esh_execute(struct esh_command_line *rline){
 			currPipe->status = BACKGROUND;
 			struct esh_pipeline *toAdd = esh_launch_background(currPipe);
 			job_add_new(toAdd);
-			printf("[%d] %d", toAdd->jid, toAdd->pgrp);
+			printf("[%d] %d\n", toAdd->jid, toAdd->pgrp);
 		}
 	}
 	
