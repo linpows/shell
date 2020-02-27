@@ -91,7 +91,7 @@ void jobs_builtin()
 }
 
 /* prints a job's commands */
-void print_job(struct esh_pipeline *pipe)
+bool print_job(struct esh_pipeline *pipe)
 {
     struct list_elem *e;
     for (e = list_begin(&pipe->commands); e != list_end(&pipe->commands); e = list_next(e))
@@ -116,6 +116,8 @@ void print_job(struct esh_pipeline *pipe)
     {
 		printf(" &");
 	}
+	
+	return true;
 }
 
 /* removes job with jid */
