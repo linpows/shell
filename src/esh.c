@@ -271,7 +271,6 @@ static struct esh_pipeline * esh_launch_background(struct esh_pipeline *pipeline
 			}
 			
 			//execute here
-			esh_signal_unblock(SIGCHLD);
 			if (execvp(currCommand->argv[0], currCommand->argv) == -1) {
 				perror("(background) process failed execution");
 			}
@@ -399,7 +398,6 @@ static int esh_launch_foreground(struct esh_pipeline *pipeline){
 			}
 			
 			//execute here
-			esh_signal_unblock(SIGCHLD);
 			if (execvp(currCommand->argv[0], currCommand->argv) == -1) {
 				perror("process failed execution");
 			}
@@ -435,7 +433,9 @@ static int esh_launch_foreground(struct esh_pipeline *pipeline){
 	give_terminal_to(c_pid, (& pipeline->saved_tty_state));
 	
 	//wait for all forked jobs and update child status
+	esh_signal_block(SIGCHILD);
 	wait_for_job(pipeline);
+	esh_signal_unblock(SIGCHILD);
 	
 	
 	
@@ -583,8 +583,6 @@ int main(int ac, char *av[]) {
 	job_list = malloc(sizeof(struct list));
 	list_init(job_list);
 	
-	esh_signal_block(SIGCHLD);
-	
     /* Read/eval loop. */
     for (;;) {
         /* Do not output a prompt unless shell's stdin is a terminal */
@@ -606,8 +604,6 @@ int main(int ac, char *av[]) {
         }
         
         //esh_command_line_print(cline);
-        esh_signal_unblock(SIGCHLD);
-		esh_signal_block(SIGCHLD);
 		
         esh_execute(cline);
         //esh_command_line_print(cline);
