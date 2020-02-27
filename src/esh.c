@@ -463,11 +463,9 @@ static int esh_execute(struct esh_command_line *rline){
 		}
 		else if(!currPipe->bg_job) {
 			//foreground jobs
-			
 			currPipe->status = FOREGROUND;
 			currPipe->jid = 0;
 			esh_launch_foreground(currPipe);
-			
 			
 			//give terminal back to shell
 			give_terminal_to(esh_pgrp, eshState);

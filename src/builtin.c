@@ -24,19 +24,19 @@ void run_builtin(struct esh_pipeline* pipe)
     {
         jobs_builtin();
     }
-    else if (strncmp(cmd->argv[0], "fg", 2) == 0 && cmd->argv)
+    else if (strncmp(cmd->argv[0], "fg", 2) == 0 && sizeof(cmd->argv) > sizeof(char*)*2)
     {
         fg_builtin(atoi(cmd->argv[1]));
     }
-    else if (strncmp(cmd->argv[0], "bg", 2) == 0)
+    else if (strncmp(cmd->argv[0], "bg", 2) == 0 && sizeof(cmd->argv) > sizeof(char*)*2)
     {
         bg_builtin(atoi(cmd->argv[1]));
     }
-    else if (strncmp(cmd->argv[0], "kill", 4) == 0)
+    else if (strncmp(cmd->argv[0], "kill", 4) == 0 && sizeof(cmd->argv) > sizeof(char*)*2)
     {
         kill_builtin(atoi(cmd->argv[1]));
     }
-    else if (strncmp(cmd->argv[0], "stop", 4) == 0)
+    else if (strncmp(cmd->argv[0], "stop", 4) == 0 && sizeof(cmd->argv) > sizeof(char*)*2)
     {
         stop_builtin(atoi(cmd->argv[1]));
     }
@@ -55,11 +55,10 @@ void fg_builtin(int jobId)
 
 		print_job(pipe);
 		printf("\n");
-		//sleep(2);
 		
 		// give term
 		//if(print_job(pipe)) {
-			//printf("\n");
+		//	printf("\n");
 		give_terminal_to(pipe->pgrp, &pipe->saved_tty_state);
 		
 
