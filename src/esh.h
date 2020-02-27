@@ -1,17 +1,30 @@
 #ifndef __ESH_H
 #define __ESH_H
+#define _XOPEN_SOURCE 500
+
 /*
  * esh - the 'extensible' shell.
  *
  * Developed by Godmar Back for CS 3214 Fall 2009
  * Virginia Tech.
  */
-
-#include <stdbool.h>
-#include <obstack.h>
+#include <assert.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
+
+#include <readline/readline.h>
+#include <obstack.h>
 #include <termios.h>
 #include "list.h"
+#include "esh-sys-utils.h"
+#include "jobs.h"
+#include "builtin.h"
 
 #if __STDC_VERSION__ < 201112L
 #error C11 or later is required.  Please use a suitable compiler, such as gcc 7 or higher. \
@@ -20,10 +33,16 @@
     before making
 #endif
 
+
+ 
 /* Forward declarations. */
 struct esh_command;
 struct esh_pipeline;
 struct esh_command_line;
+
+/* saves startup state to return to*/
+pid_t esh_pgrp;
+struct termios* eshState;
 
 /*
  * A esh_shell object allows plugins to access services and information. 
@@ -147,6 +166,7 @@ struct esh_pipeline {
                                         stopped after having been in foreground */
 
     /* Add additional fields here if needed. */
+    bool	pgrpset;	// has the process group been set?
 };
 
 /* A command is part of a pipeline. */
@@ -209,5 +229,26 @@ void esh_plugin_initialize(struct esh_shell *shell);
 
 /* List of loaded plugins */
 extern struct list esh_plugin_list;
+
+/*________________________________________/
+ * START: ~NEW FUCTIONS
+ * _____________________________________/
+ */
+ 
+ /* terminal control function */
+void give_terminal_to(pid_t pgrp, struct termios *pg_tty_state);
+
+/* waits for job termination */
+void wait_for_job(struct esh_pipeline *pipeline);
+
+//void sigchld_handler(int sig, siginfo_t *info, void *_ctxt);
+//int esh_launch_foreground(struct esh_pipeline* pipe);
+//static int esh_execute(struct esh_command_line* rline);
+ /*________________________________________/
+ * END: ~NEW FUCTIONS
+ * _____________________________________/
+ */
+ 
+
 
 #endif //__ESH_H
