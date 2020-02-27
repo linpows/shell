@@ -49,8 +49,9 @@ child_status_change(pid_t child, int status, struct esh_pipeline *pipeline)
 		pipeline->status = STOPPED;
 		
 		char *status_strings[] = {"Foreground", "Running", "Stopped", "Needs Terminal"};
-		printf("[%d] %s ",pipeline->jid, status_strings[pipeline->status]);
+		printf("[%d] %s (",pipeline->jid, status_strings[pipeline->status]);
 		print_job(pipeline);
+		printf(")\n)";
 		/*
 		printf("Process Stopped\n"); // ADD JOBS STOPPED PROCESS OUTPUT
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^

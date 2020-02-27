@@ -119,7 +119,8 @@ void stop_builtin (int jobId)
 		kill(pipe->pgrp, SIGSTOP);
 		pipe->status = STOPPED;
 		char *status_strings[] = {"Foreground", "Running", "Stopped", "Needs Terminal"};
-		printf("[%d] %s ",pipe->jid, status_strings[pipe->status]);
+		printf("[%d] %s (",pipe->jid, status_strings[pipe->status]);
 		print_job(pipe);
+		printf(")\n");
 	}
 }

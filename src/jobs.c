@@ -83,8 +83,9 @@ void jobs_builtin()
         for (job = list_entry(e, struct esh_pipeline, elem); e != list_rend(job_list); e = list_prev(e))
         {
 			job = list_entry(e, struct esh_pipeline, elem);
-            printf("[%d] %s ",job->jid, status_strings[job->status]);
+            printf("[%d] %s (",job->jid, status_strings[job->status]);
             print_job(job);
+            printf(")\n");
         }
     }
 }
@@ -93,7 +94,6 @@ void jobs_builtin()
 void print_job(struct esh_pipeline *pipe)
 {
     struct list_elem *e;
-    printf("(");
     for (e = list_begin(&pipe->commands); e != list_end(&pipe->commands); e = list_next(e))
     {
         struct esh_command *cmd = list_entry(e, struct esh_command, elem);
@@ -116,8 +116,6 @@ void print_job(struct esh_pipeline *pipe)
     {
 		printf(" &");
 	}
-
-    printf(")\n");
 }
 
 /* removes job with jid */
