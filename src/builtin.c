@@ -24,19 +24,19 @@ void run_builtin(struct esh_pipeline* pipe)
     {
         jobs_builtin();
     }
-    else if (strncmp(cmd->argv[0], "fg", 2) == 0 && sizeof(cmd->argv) > sizeof(char*))
+    else if (strncmp(cmd->argv[0], "fg", 2) == 0 && sizeof(cmd->argv[1]) > 0)
     {
         fg_builtin(atoi(cmd->argv[1]));
     }
-    else if (strncmp(cmd->argv[0], "bg", 2) == 0 && sizeof(cmd->argv) > sizeof(char*))
+    else if (strncmp(cmd->argv[0], "bg", 2) == 0 && sizeof(cmd->argv))// > sizeof(char*))
     {
         bg_builtin(atoi(cmd->argv[1]));
     }
-    else if (strncmp(cmd->argv[0], "kill", 4) == 0 && sizeof(cmd->argv) > sizeof(char*))
+    else if (strncmp(cmd->argv[0], "kill", 4) == 0 && sizeof(cmd->argv))// > sizeof(char*))
     {
         kill_builtin(atoi(cmd->argv[1]));
     }
-    else if (strncmp(cmd->argv[0], "stop", 4) == 0 && sizeof(cmd->argv) > sizeof(char*))
+    else if (strncmp(cmd->argv[0], "stop", 4) == 0 && sizeof(cmd->argv))// > sizeof(char*))
     {
         stop_builtin(atoi(cmd->argv[1]));
     }
