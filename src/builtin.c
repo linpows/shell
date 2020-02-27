@@ -53,15 +53,15 @@ void fg_builtin(int jobId)
     {
 		pipe->bg_job = false;
 
-		/*print_job(pipe);
+		print_job(pipe);
 		printf("\n");
-		sleep(2);*/
+		//sleep(2);
 		
 		// give term
-		if(print_job(pipe)) {
-			printf("\n");
-			give_terminal_to(pipe->pgrp, &pipe->saved_tty_state);
-		}
+		//if(print_job(pipe)) {
+			//printf("\n");
+		give_terminal_to(pipe->pgrp, &pipe->saved_tty_state);
+		
 
 		//continue if stopped
 		if (pipe->status == STOPPED)
