@@ -433,9 +433,9 @@ static int esh_launch_foreground(struct esh_pipeline *pipeline){
 	give_terminal_to(c_pid, (& pipeline->saved_tty_state));
 	
 	//wait for all forked jobs and update child status
-	esh_signal_block(SIGCHILD);
+	esh_signal_block(SIGCHLD);
 	wait_for_job(pipeline);
-	esh_signal_unblock(SIGCHILD);
+	esh_signal_unblock(SIGCHLD);
 	
 	
 	
