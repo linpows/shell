@@ -437,8 +437,6 @@ static int esh_launch_foreground(struct esh_pipeline *pipeline){
 	wait_for_job(pipeline);
 	esh_signal_unblock(SIGCHLD);
 	
-	
-	
 	return 0;
 }
 

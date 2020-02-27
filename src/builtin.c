@@ -51,14 +51,9 @@ void fg_builtin(int jobId)
 
 	if (pipe != NULL)
     {
-		//move to foreground
-		pipe->status = FOREGROUND;
 		pipe->bg_job = false;
 
 		print_job(pipe);
-		
-		pipe->status = FOREGROUND;
-		pipe->bg_job = false;
 		
 		// give term
 		give_terminal_to(pipe->pgrp, &pipe->saved_tty_state);
@@ -69,12 +64,15 @@ void fg_builtin(int jobId)
 			kill(pipe->pgrp, SIGCONT);
 		}
 		
+		//move to foreground
+		pipe->status = FOREGROUND;
+		
 		//wait
 		esh_signal_block(SIGCHLD);
 		wait_for_job(pipe);
 		esh_signal_unblock(SIGCHLD);    
-		give_terminal_to(esh_pgrp, eshState);
 	}
+	give_terminal_to(esh_pgrp, eshState);
 }
 
 /* built-in bg command: bg <jid>*/
