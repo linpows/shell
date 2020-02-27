@@ -119,22 +119,3 @@ bool print_job(struct esh_pipeline *pipe)
 	
 	return true;
 }
-
-/* removes job with jid */
-void remove_job(int jid)
-{
-	struct list_elem * e;
-	struct list_elem * toRemove;
-
-    for (e  = list_begin(job_list); e != list_end(job_list); e = list_next(e))
-    {
-        struct esh_pipeline *pipe= list_entry(e, struct esh_pipeline, elem);
-
-        if (pipe->jid == jid)
-        {
-            toRemove = e;
-        }
-    }
-    
-    list_remove(toRemove);
-}

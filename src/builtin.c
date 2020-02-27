@@ -53,7 +53,8 @@ void fg_builtin(int jobId)
     {
 		pipe->bg_job = false;
 
-		while(!print_job(pipe)){}
+		print_job(pipe);
+		sleep(1);
 		
 		// give term
 		give_terminal_to(pipe->pgrp, &pipe->saved_tty_state);
