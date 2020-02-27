@@ -45,8 +45,6 @@ void run_builtin(struct esh_pipeline* pipe)
 /* built-in fg command: fg <jid> */
 void fg_builtin(int jobId)
 {
-    esh_signal_block(SIGCHLD);
-
     // get job
     struct esh_pipeline *pipe;
     pipe = get_job_from_jid(jobId);
@@ -59,6 +57,9 @@ void fg_builtin(int jobId)
 
 		print_job(pipe);
 		
+		pipe->status = FOREGROUND;
+		pipe->bg_job = false;
+		
 		// give term
 		give_terminal_to(pipe->pgrp, &pipe->saved_tty_state);
 
@@ -69,10 +70,11 @@ void fg_builtin(int jobId)
 		}
 		
 		//wait
+		esh_signal_block(SIGCHLD);
 		wait_for_job(pipe);
+		esh_signal_unblock(SIGCHLD);    
 		give_terminal_to(esh_pgrp, eshState);
 	}
-    esh_signal_unblock(SIGCHLD);    
 }
 
 /* built-in bg command: bg <jid>*/
