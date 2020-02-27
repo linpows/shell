@@ -14,6 +14,11 @@ int jobNum;
 
 /* adds a new job to the list*/
 static int job_add_new(struct esh_pipeline *newJob) {
+	if(list_empty(job_list) 
+	{
+		jobNum = 1;
+	}
+	
 	newJob->jid = jobNum;
 	jobNum++;
 	
@@ -72,11 +77,16 @@ child_status_change(pid_t child, int status, struct esh_pipeline *pipeline)
 		
 		list_remove(remove);
 		
-		if(list_empty(&pipeline->commands) && !pipeline->jid == 0){
-			//remove from jobs list 
-			//MAY NEED TO UPDATE JOB NUMBERING
-			
-			list_remove(&pipeline->elem);
+		if(list_empty(&pipeline->commands)){
+			 if(!pipeline->jid == 0) {
+				//remove from jobs list 
+				//MAY NEED TO UPDATE JOB NUMBERING
+				
+				list_remove(&pipeline->elem);
+			} 
+			else {
+				jobNum++;
+			}
 			
 		}
 		
