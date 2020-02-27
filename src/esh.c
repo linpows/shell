@@ -36,14 +36,16 @@ child_status_change(pid_t child, int status, struct esh_pipeline *pipeline)
 		
 		//printf("\n");	
 		//add to jobs list and print formatted output
-		if (pipeline->status == FOREGROUND){
-			pipeline->status = STOPPED;
-			print_job(get_job_from_jid(job_add_new(pipeline)));
+		if (pipeline->jid == 0){
+			
+			job_add_new(pipeline);
 		}
-		else {
-			pipeline->status = STOPPED;
-			print_job(pipeline);
-		}
+		
+		pipeline->status = STOPPED;
+		
+		char *status_strings[] = {"Foreground", "Running", "Stopped", "Needs Terminal"};
+		printf("[%d] %s ",pipeline->jid, status_strings[pipeline->status]);
+		print_job(pipeline);
 		/*
 		printf("Process Stopped\n"); // ADD JOBS STOPPED PROCESS OUTPUT
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^
@@ -70,9 +72,10 @@ child_status_change(pid_t child, int status, struct esh_pipeline *pipeline)
 		
 		list_remove(remove);
 		
-		if(list_empty(&pipeline->commands) && pipeline->status == BACKGROUND){
+		if(list_empty(&pipeline->commands) && !pipeline->jid == 0){
 			//remove from jobs list 
 			//MAY NEED TO UPDATE JOB NUMBERING
+			
 			list_remove(&pipeline->elem);
 			
 		}
@@ -451,7 +454,9 @@ static int esh_execute(struct esh_command_line *rline){
 		}
 		else if(!currPipe->bg_job) {
 			//foreground jobs
+			
 			currPipe->status = FOREGROUND;
+			currPipe->jid = 0;
 			esh_launch_foreground(currPipe);
 			
 			
