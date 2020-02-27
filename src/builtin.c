@@ -63,11 +63,11 @@ void fg_builtin(int jobId)
 		}
 
 		//move to foreground
-		//pipe->status = FOREGROUND;
-		pipe->bg_job = false  ;
+		pipe->status = FOREGROUND;
+		pipe->bg_job = false;
 
 		//print_job(pipe);
-
+		
 		//wait
 		wait_for_job(pipe);
 		give_terminal_to(esh_pgrp, eshState);

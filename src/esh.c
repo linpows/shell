@@ -7,15 +7,17 @@
 
 #include "esh.h"
 
+/* saves startup state to return to*/
+
 int jobNum;
 
 
 /* adds a new job to the list*/
 static int job_add_new(struct esh_pipeline *newJob) {
 	newJob->jid = jobNum;
+	jobNum++;
 	
 	list_push_front(job_list, &(newJob->elem));
-	jobNum++;
 	return newJob->jid;
 }
 
@@ -34,14 +36,16 @@ child_status_change(pid_t child, int status, struct esh_pipeline *pipeline)
 		
 		//printf("\n");	
 		//add to jobs list and print formatted output
-		if (pipeline->status == FOREGROUND){
-			pipeline->status = STOPPED;
-			print_job(get_job_from_jid(job_add_new(pipeline)));
+		if (pipeline->jid == 0){
+			
+			job_add_new(pipeline);
 		}
-		else {
-			pipeline->status = STOPPED;
-			print_job(pipeline);
-		}
+		
+		pipeline->status = STOPPED;
+		
+		char *status_strings[] = {"Foreground", "Running", "Stopped", "Needs Terminal"};
+		printf("[%d] %s ",pipeline->jid, status_strings[pipeline->status]);
+		print_job(pipeline);
 		/*
 		printf("Process Stopped\n"); // ADD JOBS STOPPED PROCESS OUTPUT
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^
@@ -68,9 +72,10 @@ child_status_change(pid_t child, int status, struct esh_pipeline *pipeline)
 		
 		list_remove(remove);
 		
-		if(list_empty(&pipeline->commands) && pipeline->status == BACKGROUND){
+		if(list_empty(&pipeline->commands) && !pipeline->jid == 0){
 			//remove from jobs list 
 			//MAY NEED TO UPDATE JOB NUMBERING
+			
 			list_remove(&pipeline->elem);
 			
 		}
@@ -167,33 +172,90 @@ void give_terminal_to(pid_t pgrp, struct termios *pg_tty_state)
 /**
  * function to handle background execution
  */
-static struct esh_pipeline * esh_launch_background(struct esh_pipeline *pipe){
+static struct esh_pipeline * esh_launch_background(struct esh_pipeline *pipeline){
 	struct list_elem *e;
 	bool has_set_pipe_pgrp = false;
 	
 	//create a terminal object for pipeline if it has not already been made
-	if(!pipe->pgrpset) {
-		esh_sys_tty_save((& pipe->saved_tty_state));
+	if(!pipeline->pgrpset) {
+		esh_sys_tty_save((& pipeline->saved_tty_state));
 	}
 	
 	pid_t c_pid;
-	for (e = list_begin(&pipe->commands); e != list_end(&pipe->commands); e = list_next(e)) 
+	//num of command in pipeline
+	int numProcesses = list_size(&pipeline->commands);
+	//process pipe
+	int pipes[numProcesses - 1][2];
+	int processNum = 0;
+	
+	for (e = list_begin(&pipeline->commands); e != list_end(&pipeline->commands); e = list_next(e)) 
 	{
 		
 		struct esh_command *currCommand = list_entry (e, struct esh_command, elem);
 		
+		//initialize process pipes
+		if(e != list_back(&pipeline->commands)){
+			// not the last element make pipe
+			if(pipe(pipes[processNum]) < 0){
+				perror("background piping error ");
+			}
+		}
+		
 		if((c_pid = fork()) == 0) {
 			//in child
 			
+			if(e != list_back(&pipeline->commands)){
+				//set stdout
+				if (dup2(pipes[processNum][1], STDOUT_FILENO) < 0){
+					perror("DUP2 out");
+				}
+				close(pipes[processNum][1]);
+				close(pipes[processNum][0]);
+			}
+			else {
+				//last command
+				if (pipeline->iored_output != NULL){
+					//check for iored_out
+					int iored_out;
+					if(pipeline->append_to_output){
+						iored_out = 
+							open(pipeline->iored_output, O_APPEND | O_WRONLY);
+					}
+					else {
+						iored_out = 
+							open(pipeline->iored_output, O_CREAT | O_WRONLY, 0777);
+					}
+					dup2(iored_out, STDOUT_FILENO);
+					close(iored_out);
+				}
+			}
+			
+				
 			//ID setup
 			currCommand->pid = getpid();
+			//first command
 			if(has_set_pipe_pgrp == false){
 				//initialize project group for entire pipeline
-				pipe->pgrp = currCommand->pid;
+				pipeline->pgrp = currCommand->pid;
+				
+				if (pipeline->iored_input != NULL){
+					int iored_in = 
+						open(pipeline->iored_input, O_RDONLY | O_CREAT);
+					dup2(iored_in, STDIN_FILENO);
+					close(iored_in);
+				}
+			}
+			else {
+				//in from prev processes pipe
+				if (dup2(pipes[processNum - 1][0], STDIN_FILENO) < 0){
+					perror("dup2 out");
+				}
+				close(pipes[processNum - 1][0]);
+				close(pipes[processNum - 1][1]);
 			}
 			
 			//set individual process groups
-			if(setpgid(0, pipe->pgrp) < 0){
+			if(setpgid(0, pipeline->pgrp) < 0){
 				perror("(background) child setting process group Error");
 			}
 			
@@ -212,49 +274,116 @@ static struct esh_pipeline * esh_launch_background(struct esh_pipeline *pipe){
 			//in parent
 			if(has_set_pipe_pgrp == false){
 				//initialize project group for entire pipeline
-				pipe->pgrp = c_pid;
+				pipeline->pgrp = c_pid;
 				has_set_pipe_pgrp = true;
 			}
+			else {
+				close(pipes[processNum - 1][1]);
+				close(pipes[processNum - 1][0]);
+			}
 			
-			if(setpgid(c_pid, pipe->pgrp) < 0){
+			if(setpgid(c_pid, pipeline->pgrp) < 0){
 				perror("(background) Parent Setting child process group error");
 			}
 			currCommand->pid = c_pid;
 		}
+		processNum++;
 	}
 	
-	return pipe;
+	return pipeline;
 }
 
 /**
  * function to handle foreground execution
  */
-static int esh_launch_foreground(struct esh_pipeline *pipe){
+static int esh_launch_foreground(struct esh_pipeline *pipeline){
 	struct list_elem *e;
 	
 	//create a terminal object for pipeline;
-	esh_sys_tty_save((& pipe->saved_tty_state));
+	esh_sys_tty_save((& pipeline->saved_tty_state));
 	bool has_set_pipe_pgrp = false;
 	
 	pid_t c_pid;
-	for (e = list_begin(&pipe->commands); e != list_end(&pipe->commands); e = list_next(e)) 
+	int numProcesses = list_size(&pipeline->commands);
+	
+	//process pipe
+	int pipes[numProcesses - 1][2];
+	
+	int processNum = 0;
+	for (e = list_begin(&pipeline->commands); e != list_end(&pipeline->commands); e = list_next(e)) 
 	{
 		
 		struct esh_command *currCommand = list_entry (e, struct esh_command, elem);
 		
+		//initialize process pipes
+		
+		
+		if(e != list_back(&pipeline->commands)){
+			// not the last element make pipe
+			if(pipe(pipes[processNum]) < 0){
+				perror("foreground piping error ");
+			}
+		}
+		
+		
 		if((c_pid = fork()) == 0) {
 			//in child
-			
+			if(e != list_back(&pipeline->commands)){
+				//set stdout
+				if (dup2(pipes[processNum][1], STDOUT_FILENO) < 0){
+					perror("DUP2 out");
+				}
+				close(pipes[processNum][1]);
+				close(pipes[processNum][0]);
+			}
+			else {
+				//last command
+				if (pipeline->iored_output != NULL){
+					//check for iored_out
+					int iored_out;
+					if(pipeline->append_to_output){
+						iored_out = 
+							open(pipeline->iored_output, O_APPEND | O_WRONLY);
+					}
+					else {
+						iored_out = 
+							open(pipeline->iored_output, O_CREAT | O_WRONLY, 0777);
+					}
+					dup2(iored_out, STDOUT_FILENO);
+					close(iored_out);
+				}
+			}
+		
 			//ID setup
 			currCommand->pid = getpid();
+			
+			//case first command
 			if(has_set_pipe_pgrp == false){
 				//initialize project group for entire pipeline
-				pipe->pgrp = currCommand->pid;
-				give_terminal_to(pipe->pgrp, (& pipe->saved_tty_state));
+				pipeline->pgrp = currCommand->pid;
+				
+				if (pipeline->iored_input != NULL){
+					int iored_in = 
+						open(pipeline->iored_input, O_RDONLY | O_CREAT);
+					dup2(iored_in, STDIN_FILENO);
+					close(iored_in);
+				}
+				
+				give_terminal_to(pipeline->pgrp, (& pipeline->saved_tty_state));
+			}
+			else {
+				//in from prev processes pipe
+				if (dup2(pipes[processNum - 1][0], STDIN_FILENO) < 0){
+					perror("dup2 out");
+				}
+				close(pipes[processNum - 1][0]);
+				close(pipes[processNum - 1][1]);
 			}
 			
+			
+			
 			//set individual process groups
-			if(setpgid(0, pipe->pgrp) < 0){
+			if(setpgid(0, pipeline->pgrp) < 0){
 				perror("child setting process group Error");
 			}
 			
@@ -273,11 +402,15 @@ static int esh_launch_foreground(struct esh_pipeline *pipe){
 			//in parent
 			if(has_set_pipe_pgrp == false){
 				//initialize project group for entire pipeline
-				pipe->pgrp = c_pid;
+				pipeline->pgrp = c_pid;
 				has_set_pipe_pgrp = true;
 			}
+			else {
+				close(pipes[processNum - 1][1]);
+				close(pipes[processNum - 1][0]);
+			}
 			
-			if(setpgid(c_pid, pipe->pgrp) < 0){
+			if(setpgid(c_pid, pipeline->pgrp) < 0){
 				perror("Parent Setting child process group error");
 			}
 			
@@ -286,11 +419,13 @@ static int esh_launch_foreground(struct esh_pipeline *pipe){
 			//printf("%d : pipe group id\n%d esh group id:\n", c_pid, getpgrp());
 			
 		}
+		processNum++;
 	}
-	give_terminal_to(c_pid, (& pipe->saved_tty_state));
+	give_terminal_to(c_pid, (& pipeline->saved_tty_state));
 	
 	//wait for all forked jobs and update child status
-	wait_for_job(pipe);
+	wait_for_job(pipeline);
+	
 	
 	
 	return 0;
@@ -309,18 +444,19 @@ static int esh_execute(struct esh_command_line *rline){
 		e = list_pop_front(&rline->pipes);
 		
 		struct esh_pipeline *currPipe = 
-			list_entry(e, struct esh_pipeline, elem);
+			list_entry (e, struct esh_pipeline, elem);
 		
 		struct list_elem *c = list_begin(&currPipe->commands);
 		struct esh_command *cmd = list_entry(c, struct esh_command, elem);
-			
-		if(is_builtin(cmd->argv[0]))
-		{
+		
+		if(is_builtin(cmd->argv[0])){
 			run_builtin(currPipe);
 		}
 		else if(!currPipe->bg_job) {
 			//foreground jobs
+			
 			currPipe->status = FOREGROUND;
+			currPipe->jid = 0;
 			esh_launch_foreground(currPipe);
 			
 			
@@ -460,7 +596,7 @@ int main(int ac, char *av[]) {
         //esh_command_line_print(cline);
         esh_signal_unblock(SIGCHLD);
 		esh_signal_block(SIGCHLD);
-	
+		
         esh_execute(cline);
         //esh_command_line_print(cline);
         //esh_command_line_free(cline);

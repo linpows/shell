@@ -11,12 +11,15 @@
 #include <assert.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
-#include <readline/readline.h>
-#include <stdbool.h>
-#include <obstack.h>
 #include <stdlib.h>
+#include <stdbool.h>
+
+#include <readline/readline.h>
+#include <obstack.h>
 #include <termios.h>
 #include "list.h"
 #include "esh-sys-utils.h"
