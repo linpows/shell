@@ -24,19 +24,19 @@ void run_builtin(struct esh_pipeline* pipe)
     {
         jobs_builtin();
     }
-    if (strncmp(cmd->argv[0], "fg", 2) == 0)
+    else if (strncmp(cmd->argv[0], "fg", 2) == 0)
     {
         fg_builtin(atoi(cmd->argv[1]));
     }
-    if (strncmp(cmd->argv[0], "bg", 2) == 0)
+    else if (strncmp(cmd->argv[0], "bg", 2) == 0)
     {
         bg_builtin(atoi(cmd->argv[1]));
     }
-    if (strncmp(cmd->argv[0], "kill", 4) == 0)
+    else if (strncmp(cmd->argv[0], "kill", 4) == 0)
     {
         kill_builtin(atoi(cmd->argv[1]));
     }
-    if (strncmp(cmd->argv[0], "stop", 4) == 0)
+    else if (strncmp(cmd->argv[0], "stop", 4) == 0)
     {
         stop_builtin(atoi(cmd->argv[1]));
     }
@@ -64,7 +64,7 @@ void fg_builtin(int jobId)
 
 		//move to foreground
 		//pipe->status = FOREGROUND;
-		pipe->bg_job = false;
+		pipe->bg_job = false  ;
 
 		//print_job(pipe);
 
