@@ -121,5 +121,9 @@ void stop_builtin (int jobId)
 	{
 		kill(pipe->pgrp, SIGSTOP);
 		pipe->status = STOPPED;
+<<<<<<< HEAD
+=======
+		
+>>>>>>> danBranch
 	}
 }

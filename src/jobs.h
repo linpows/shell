@@ -32,6 +32,6 @@ struct esh_command * get_cmd_from_pid(pid_t pid);
 void jobs_builtin(void);
 
 /* prints a job's commands */
-bool print_job(struct esh_pipeline *pipe);
+void print_job(struct esh_pipeline *pipe);
 
 #endif //__JOBS_H
