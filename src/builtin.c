@@ -7,7 +7,7 @@
 /* checks if command is built in */
 bool is_builtin(char* cmd)
 {
-    if (strncmp(cmd, "jobs", 4) == 0 || strncmp(cmd, "fg", 2) == 0 || strncmp(cmd, "bg", 2) == 0 || strncmp(cmd, "kill", 4) == 0 || strncmp(cmd, "stop", 4) == 0)
+    if (strncmp(cmd, "jobs", 4) == 0 || strncmp(cmd, "fg", 2) == 0 && cmd->argv[1] || strncmp(cmd, "bg", 2) == 0 && cmd->argv[1] || strncmp(cmd, "kill", 4) == 0 && cmd->argv[1] || strncmp(cmd, "stop", 4) == 0 && cmd->argv[1])
     {
         return true;
     }
@@ -24,19 +24,19 @@ void run_builtin(struct esh_pipeline* pipe)
     {
         jobs_builtin();
     }
-    else if (strncmp(cmd->argv[0], "fg", 2) == 0 && cmd->argv[1])
+    else if (strncmp(cmd->argv[0], "fg", 2) == 0)
     {
         fg_builtin(atoi(cmd->argv[1]));
     }
-    else if (strncmp(cmd->argv[0], "bg", 2) == 0 )//&& sizeof(cmd->argv) > sizeof(char*))
+    else if (strncmp(cmd->argv[0], "bg", 2) == 0)
     {
         bg_builtin(atoi(cmd->argv[1]));
     }
-    else if (strncmp(cmd->argv[0], "kill", 4) == 0 )//&& sizeof(cmd->argv) > sizeof(char*))
+    else if (strncmp(cmd->argv[0], "kill", 4) == 0)
     {
         kill_builtin(atoi(cmd->argv[1]));
     }
-    else if (strncmp(cmd->argv[0], "stop", 4) == 0 )//&& sizeof(cmd->argv) > sizeof(char*))
+    else if (strncmp(cmd->argv[0], "stop", 4) == 0)
     {
         stop_builtin(atoi(cmd->argv[1]));
     }
