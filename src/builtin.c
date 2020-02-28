@@ -7,7 +7,7 @@
 /* checks if command is built in */
 bool is_builtin(char** cmd)
 {
-    if (strncmp(cmd, "jobs", 4) == 0 || strncmp(cmd, "fg", 2) == 0 && cmd[1] || strncmp(cmd, "bg", 2) == 0 && cmd[1] || strncmp(cmd, "kill", 4) == 0 && cmd[1] || strncmp(cmd, "stop", 4) == 0 && cmd[1])
+    if (strncmp(cmd[0], "jobs", 4) == 0 || (strncmp(cmd[0], "fg", 2) == 0 && cmd[1]) || (strncmp(cmd[0], "bg", 2) == 0 && cmd[1]) || (strncmp(cmd[0], "kill", 4) == 0 && cmd[1]) || (strncmp(cmd[0], "stop", 4) == 0 && cmd[1]))
     {
         return true;
     }
