@@ -38,8 +38,6 @@ child_status_change(pid_t child, int status, struct esh_pipeline *pipeline)
 	//SIGSTOP CASE
 	if (WIFSTOPPED(status) ){
 		
-		
-		
 		//printf("\n");	
 		//add to jobs list and print formatted output
 		if (pipeline->jid == 0){
@@ -70,6 +68,7 @@ child_status_change(pid_t child, int status, struct esh_pipeline *pipeline)
 		while (e != list_end (&(pipeline->commands))){
 			// obtains struct using pointer arithmetic
 			struct esh_command *curr = list_entry (e, struct esh_command, elem);
+			
 			if(curr->pid == child) {
 				remove = &curr->elem;
 				break;
@@ -79,6 +78,9 @@ child_status_change(pid_t child, int status, struct esh_pipeline *pipeline)
 		if (remove == NULL){
 			return;
 		} 
+		if(remove == NULL){
+			
+		}
 		list_remove(remove);
 		
 		if(list_empty(&pipeline->commands)){
@@ -91,11 +93,7 @@ child_status_change(pid_t child, int status, struct esh_pipeline *pipeline)
 			else {
 				jobNum++;
 			}
-			
 		}
-		
-		//struct esh_command *removed = list_entry(remove, struct esh_command, elem);
-		//free(removed);
 	}
 }
 
@@ -394,9 +392,6 @@ static int esh_launch_foreground(struct esh_pipeline *pipeline){
 				close(pipes[processNum - 1][0]);
 				close(pipes[processNum - 1][1]);
 			}
-			
-			
-			
 			//set individual process groups
 			if(setpgid(0, gPid) < 0){
 				perror("child setting process group Error");
@@ -435,7 +430,7 @@ static int esh_launch_foreground(struct esh_pipeline *pipeline){
 		}
 		processNum++;
 	}
-	give_terminal_to(c_pid, (& pipeline->saved_tty_state));
+	give_terminal_to(pipeline->pgrp, (& pipeline->saved_tty_state));
 	
 	//wait for all forked jobs and update child status
 	esh_signal_block(SIGCHLD);

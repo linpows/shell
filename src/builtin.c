@@ -90,6 +90,7 @@ void bg_builtin(int jobId)
     {
 		pipe->status = BACKGROUND;
 		pipe->bg_job = true;
+		
 		kill(pipe->pgrp, SIGCONT);
 
 		//Save state
@@ -120,6 +121,6 @@ void stop_builtin (int jobId)
 	if(pipe != NULL) 
 	{
 		kill(pipe->pgrp, SIGSTOP);
-		pipe->status = STOPPED;
+		//pipe->status = STOPPED;
 	}
 }
