@@ -458,7 +458,7 @@ static int esh_execute(struct esh_command_line *rline){
 		struct list_elem *c = list_begin(&currPipe->commands);
 		struct esh_command *cmd = list_entry(c, struct esh_command, elem);
 		
-		if(is_builtin(cmd->argv[0])){
+		if(is_builtin(cmd->argv)){
 			run_builtin(currPipe);
 		}
 		else if(!currPipe->bg_job) {

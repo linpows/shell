@@ -5,9 +5,9 @@
 #include "builtin.h"
 
 /* checks if command is built in */
-bool is_builtin(char* cmd)
+bool is_builtin(char** cmd)
 {
-    if (strncmp(cmd, "jobs", 4) == 0 || strncmp(cmd, "fg", 2) == 0 && cmd->argv[1] || strncmp(cmd, "bg", 2) == 0 && cmd->argv[1] || strncmp(cmd, "kill", 4) == 0 && cmd->argv[1] || strncmp(cmd, "stop", 4) == 0 && cmd->argv[1])
+    if (strncmp(cmd, "jobs", 4) == 0 || strncmp(cmd, "fg", 2) == 0 && cmd[1] || strncmp(cmd, "bg", 2) == 0 && cmd[1] || strncmp(cmd, "kill", 4) == 0 && cmd[1] || strncmp(cmd, "stop", 4) == 0 && cmd[1])
     {
         return true;
     }

@@ -19,7 +19,7 @@
 struct esh_pipeline;
 
 /* checks if command is built in */
-bool is_builtin(char* cmd);
+bool is_builtin(char** cmd);
 
 /* runs built in commands */
 void run_builtin(struct esh_pipeline *pipe);
