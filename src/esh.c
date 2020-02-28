@@ -435,7 +435,7 @@ static int esh_launch_foreground(struct esh_pipeline *pipeline){
 		}
 		processNum++;
 	}
-	give_terminal_to(c_pid, (& pipeline->saved_tty_state));
+	give_terminal_to(pipeline->pgrp, (& pipeline->saved_tty_state));
 	
 	//wait for all forked jobs and update child status
 	esh_signal_block(SIGCHLD);
@@ -467,12 +467,9 @@ static int esh_execute(struct esh_command_line *rline){
 		bool plugged = false;
 		struct esh_plugin *pl = list_entry(p, struct esh_plugin, elem);
 		
-		//printf("plugins");
-		
 		for(; p != list_end(&esh_plugin_list); p = list_next(p))
 		{
 			pl = list_entry(p, struct esh_plugin, elem);
-			//printf("plugin X");
 			if(pl->process_builtin)
 			{
 				if(pl->process_builtin(cmd))
@@ -482,8 +479,6 @@ static int esh_execute(struct esh_command_line *rline){
 				}
 			}
 		}
-		
-		//printf("end plugins");
 		
 		if(plugged) {
 			continue;
