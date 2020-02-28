@@ -121,6 +121,8 @@ void stop_builtin (int jobId)
 	if(pipe != NULL) 
 	{
 		kill(pipe->pgrp, SIGSTOP);
+
 		//pipe->status = STOPPED;
+
 	}
 }

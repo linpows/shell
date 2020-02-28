@@ -458,6 +458,26 @@ static int esh_execute(struct esh_command_line *rline){
 		struct list_elem *c = list_begin(&currPipe->commands);
 		struct esh_command *cmd = list_entry(c, struct esh_command, elem);
 		
+		struct list_elem *p = list_begin(&esh_plugin_list);
+		bool plugged = false;
+		struct esh_plugin *pl = list_entry(p, struct esh_plugin, elem);
+		
+		for(; p != list_end(&esh_plugin_list); p = list_next(p))
+		{
+			pl = list_entry(p, struct esh_plugin, elem);
+			if(pl->process_builtin)
+			{
+				if(pl->process_builtin(cmd))
+				{
+					plugged = true;
+					break;
+				}
+			}
+		}
+		
+		if(plugged) {
+			continue;
+		}
 		if(is_builtin(cmd->argv)){
 			run_builtin(currPipe);
 		}
@@ -537,6 +557,11 @@ build_prompt_from_plugins(void)
  */
 struct esh_shell shell =
 {
+	.get_jobs = get_jobs,
+	.get_job_from_jid = get_job_from_jid,
+	.get_job_from_pgrp = get_job_from_pgrp,
+	.get_cmd_from_pid = get_cmd_from_pid,
+	
     .build_prompt = build_prompt_from_plugins,
     .readline = readline,       /* GNU readline(3) */ 
     .parse_command_line = esh_parse_command_line /* Default parser */
