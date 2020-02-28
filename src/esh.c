@@ -463,6 +463,21 @@ static int esh_execute(struct esh_command_line *rline){
 		struct list_elem *c = list_begin(&currPipe->commands);
 		struct esh_command *cmd = list_entry(c, struct esh_command, elem);
 		
+		struct list_elem *p = list_begin(&esh_plugin_list);
+		bool plugged = false;
+		
+		for(struct esh_plugin *pl = list_entry(p, struct esh_plugin, elem); pl != list_end(&esh_plugin_list); pl = list_next(pl))
+		{
+			if(pl.process_builtin(cmd))
+			{
+				plugged = true;
+				break;
+			}
+		}
+		
+		if(plugged) {
+			continue;
+		}
 		if(is_builtin(cmd->argv)){
 			run_builtin(currPipe);
 		}
