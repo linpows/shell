@@ -34,7 +34,5 @@ void jobs_builtin(void);
 /* prints a job's commands */
 void print_job(struct esh_pipeline *pipe);
 
-/* removes job with jid */
-void remove_job(int jid);
 
 #endif //__JOBS_H

@@ -39,6 +39,7 @@ child_status_change(pid_t child, int status, struct esh_pipeline *pipeline)
 	if (WIFSTOPPED(status) ){
 		
 		
+		
 		//printf("\n");	
 		//add to jobs list and print formatted output
 		if (pipeline->jid == 0){
@@ -46,11 +47,15 @@ child_status_change(pid_t child, int status, struct esh_pipeline *pipeline)
 			job_add_new(pipeline);
 		}
 		
-		pipeline->status = STOPPED;
 		
 		char *status_strings[] = {"Foreground", "Running", "Stopped", "Needs Terminal"};
-		printf("[%d] %s ",pipeline->jid, status_strings[pipeline->status]);
-		print_job(pipeline);
+		if(pipeline->status != STOPPED){
+			pipeline->status = STOPPED;
+			printf("[%d] %s ",pipeline->jid, status_strings[pipeline->status]);
+			print_job(pipeline);
+		}
+		
+		
 		/*
 		printf("Process Stopped\n"); // ADD JOBS STOPPED PROCESS OUTPUT
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^
@@ -62,7 +67,7 @@ child_status_change(pid_t child, int status, struct esh_pipeline *pipeline)
 	else {
 		
 		struct list_elem *e;
-		struct list_elem *remove;
+		struct list_elem *remove = NULL;
 		
 		e = list_begin(&(pipeline->commands)); // starting position
 		while (e != list_end (&(pipeline->commands))){
@@ -74,11 +79,13 @@ child_status_change(pid_t child, int status, struct esh_pipeline *pipeline)
 			}
 			e = list_next(e); // increment condition
 		}
-		
+		if (remove == NULL){
+			return;
+		} 
 		list_remove(remove);
 		
 		if(list_empty(&pipeline->commands)){
-			 if(!pipeline->jid == 0) {
+			 if(!(pipeline->jid == 0)) {
 				//remove from jobs list 
 				//MAY NEED TO UPDATE JOB NUMBERING
 				
@@ -212,7 +219,7 @@ static struct esh_pipeline * esh_launch_background(struct esh_pipeline *pipeline
 		}
 		
 		if((c_pid = fork()) == 0) {
-			//in child
+			//in child//////////////////////////////////////////////////////////
 			
 			if(e != list_back(&pipeline->commands)){
 				//set stdout
@@ -242,12 +249,12 @@ static struct esh_pipeline * esh_launch_background(struct esh_pipeline *pipeline
 			
 				
 			//ID setup
-			currCommand->pid = getpid();
+			pid_t pid = getpid();
+			pid_t gPid = pid;
 			//first command
 			if(has_set_pipe_pgrp == false){
-				//initialize project group for entire pipeline
-				pipeline->pgrp = currCommand->pid;
 				
+				//setup Read from file on 1st Command
 				if (pipeline->iored_input != NULL){
 					int iored_in = 
 						open(pipeline->iored_input, O_RDONLY | O_CREAT);
@@ -256,6 +263,7 @@ static struct esh_pipeline * esh_launch_background(struct esh_pipeline *pipeline
 				}
 			}
 			else {
+				gPid = pipeline->pgrp;
 				//in from prev processes pipe
 				if (dup2(pipes[processNum - 1][0], STDIN_FILENO) < 0){
 					perror("dup2 out");
@@ -265,12 +273,11 @@ static struct esh_pipeline * esh_launch_background(struct esh_pipeline *pipeline
 			}
 			
 			//set individual process groups
-			if(setpgid(0, pipeline->pgrp) < 0){
+			if(setpgid(0, gPid) < 0){
 				perror("(background) child setting process group Error");
 			}
 			
 			//execute here
-			esh_signal_unblock(SIGCHLD);
 			if (execvp(currCommand->argv[0], currCommand->argv) == -1) {
 				perror("(background) process failed execution");
 			}
@@ -353,7 +360,7 @@ static int esh_launch_foreground(struct esh_pipeline *pipeline){
 					int iored_out;
 					if(pipeline->append_to_output){
 						iored_out = 
-							open(pipeline->iored_output, O_APPEND | O_WRONLY);
+							open(pipeline->iored_output, O_CREAT | O_APPEND | O_WRONLY, 0777);
 					}
 					else {
 						iored_out = 
@@ -365,12 +372,12 @@ static int esh_launch_foreground(struct esh_pipeline *pipeline){
 			}
 		
 			//ID setup
-			currCommand->pid = getpid();
+			//ID setup
+			pid_t pid = getpid();
+			pid_t gPid = pid;
 			
 			//case first command
 			if(has_set_pipe_pgrp == false){
-				//initialize project group for entire pipeline
-				pipeline->pgrp = currCommand->pid;
 				
 				if (pipeline->iored_input != NULL){
 					int iored_in = 
@@ -379,9 +386,10 @@ static int esh_launch_foreground(struct esh_pipeline *pipeline){
 					close(iored_in);
 				}
 				
-				give_terminal_to(pipeline->pgrp, (& pipeline->saved_tty_state));
+				give_terminal_to(gPid, (& pipeline->saved_tty_state));
 			}
 			else {
+				gPid = pipeline->pgrp;
 				//in from prev processes pipe
 				if (dup2(pipes[processNum - 1][0], STDIN_FILENO) < 0){
 					perror("dup2 out");
@@ -393,12 +401,11 @@ static int esh_launch_foreground(struct esh_pipeline *pipeline){
 			
 			
 			//set individual process groups
-			if(setpgid(0, pipeline->pgrp) < 0){
+			if(setpgid(0, gPid) < 0){
 				perror("child setting process group Error");
 			}
 			
 			//execute here
-			esh_signal_unblock(SIGCHLD);
 			if (execvp(currCommand->argv[0], currCommand->argv) == -1) {
 				perror("process failed execution");
 			}
@@ -434,9 +441,10 @@ static int esh_launch_foreground(struct esh_pipeline *pipeline){
 	give_terminal_to(c_pid, (& pipeline->saved_tty_state));
 	
 	//wait for all forked jobs and update child status
+	
+	esh_signal_block(SIGCHLD);
 	wait_for_job(pipeline);
-	
-	
+	esh_signal_unblock(SIGCHLD);
 	
 	return 0;
 }
@@ -478,7 +486,7 @@ static int esh_execute(struct esh_command_line *rline){
 			currPipe->status = BACKGROUND;
 			struct esh_pipeline *toAdd = esh_launch_background(currPipe);
 			job_add_new(toAdd);
-			printf("[%d] %d", toAdd->jid, toAdd->pgrp);
+			printf("[%d] %d\n", toAdd->jid, toAdd->pgrp);
 		}
 	}
 	
@@ -582,8 +590,6 @@ int main(int ac, char *av[]) {
 	job_list = malloc(sizeof(struct list));
 	list_init(job_list);
 	
-	esh_signal_block(SIGCHLD);
-	
     /* Read/eval loop. */
     for (;;) {
         /* Do not output a prompt unless shell's stdin is a terminal */
@@ -604,9 +610,7 @@ int main(int ac, char *av[]) {
             continue;
         }
         
-        //esh_command_line_print(cline);
-        esh_signal_unblock(SIGCHLD);
-		esh_signal_block(SIGCHLD);
+        
 		
         esh_execute(cline);
         //esh_command_line_print(cline);

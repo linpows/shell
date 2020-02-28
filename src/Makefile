@@ -11,7 +11,7 @@ YACC=bison
 
 LIB_OBJECTS=list.o esh-utils.o esh-sys-utils.o jobs.o builtin.o
 OBJECTS=esh.o
-HEADERS=list.h esh.h esh-sys-utils.h jobs.h builtin.o
+HEADERS=list.h esh.h esh-sys-utils.h jobs.h builtin.h
 PLUGINDIR=plugins
 PLUGIN_C=$(wildcard $(PLUGINDIR)/*.c)
 PLUGIN_SO=$(patsubst %.c,%.so,$(PLUGIN_C))

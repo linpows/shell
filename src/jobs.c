@@ -49,15 +49,15 @@ struct esh_command * get_cmd_from_pid(pid_t pid){
 	if (!list_empty(job_list))
     {
         struct list_elem * e = list_begin(job_list);
-        struct esh_pipeline * job;
+        
 
-        for (job = list_entry(e, struct esh_pipeline, elem); e != list_end(job_list); e = list_next(e))
+        for (struct esh_pipeline * job = list_entry(e, struct esh_pipeline, elem); e != list_end(job_list); e = list_next(e))
         {
 			job = list_entry(e, struct esh_pipeline, elem);
 			struct list_elem * c = list_begin(&job->commands);
-			struct esh_command * cmd;
+			
             
-            for (cmd = list_entry(c, struct esh_command, elem); c != list_end(&job->commands); c = list_next(c))
+            for (struct esh_command * cmd = list_entry(c, struct esh_command, elem); c != list_end(&job->commands); c = list_next(c))
             {
 				cmd = list_entry(c, struct esh_command, elem);
 				if (cmd->pid == pid)
@@ -78,9 +78,9 @@ void jobs_builtin()
     if (!list_empty(job_list))
     {
         struct list_elem * e = list_rbegin(job_list);
-        struct esh_pipeline * job;
+        
 
-        for (job = list_entry(e, struct esh_pipeline, elem); e != list_rend(job_list); e = list_prev(e))
+        for (struct esh_pipeline * job = list_entry(e, struct esh_pipeline, elem); e != list_rend(job_list); e = list_prev(e))
         {
 			job = list_entry(e, struct esh_pipeline, elem);
             printf("[%d] %s ",job->jid, status_strings[job->status]);
@@ -94,6 +94,7 @@ void print_job(struct esh_pipeline *pipe)
 {
     struct list_elem *e;
     printf("(");
+    int numCommands = list_size(&pipe->commands);
     for (e = list_begin(&pipe->commands); e != list_end(&pipe->commands); e = list_next(e))
     {
         struct esh_command *cmd = list_entry(e, struct esh_command, elem);
@@ -106,7 +107,7 @@ void print_job(struct esh_pipeline *pipe)
             argv++;
         }
         //if there is more than one command
-        if (1 < list_size(&pipe->commands))
+        if (1 < numCommands--)
         {
             printf(" | ");
         }
@@ -118,23 +119,4 @@ void print_job(struct esh_pipeline *pipe)
 	}
 
     printf(")\n");
-}
-
-/* removes job with jid */
-void remove_job(int jid)
-{
-	struct list_elem * e;
-	struct list_elem * toRemove;
-
-    for (e  = list_begin(job_list); e != list_end(job_list); e = list_next(e))
-    {
-        struct esh_pipeline *pipe= list_entry(e, struct esh_pipeline, elem);
-
-        if (pipe->jid == jid)
-        {
-            toRemove = e;
-        }
-    }
-    
-    list_remove(toRemove);
 }
