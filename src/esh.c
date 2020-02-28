@@ -467,20 +467,23 @@ static int esh_execute(struct esh_command_line *rline){
 		bool plugged = false;
 		struct esh_plugin *pl = list_entry(p, struct esh_plugin, elem);
 		
-		printf("plugins");
+		//printf("plugins");
 		
 		for(; p != list_end(&esh_plugin_list); p = list_next(p))
 		{
 			pl = list_entry(p, struct esh_plugin, elem);
-			printf("plugin X");
-			if(pl->process_builtin(cmd))
+			//printf("plugin X");
+			if(pl->process_builtin)
 			{
-				plugged = true;
-				break;
+				if(pl->process_builtin(cmd))
+				{
+					plugged = true;
+					break;
+				}
 			}
 		}
 		
-		printf("end plugins");
+		//printf("end plugins");
 		
 		if(plugged) {
 			continue;
