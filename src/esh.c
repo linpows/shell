@@ -49,9 +49,9 @@ child_status_change(pid_t child, int status, struct esh_pipeline *pipeline)
 		
 		if(pipeline->status != STOPPED){
 			pipeline->status = STOPPED;
-			printf("[%d] Stopped ",pipeline->jid);
+			printf("[%d] Stopped (",pipeline->jid);
 			print_job(pipeline);
-			printf("\n");
+			printf(")\n");
 		}
 		/*
 		printf("Process Stopped\n"); // ADD JOBS STOPPED PROCESS OUTPUT
