@@ -542,6 +542,11 @@ build_prompt_from_plugins(void)
  */
 struct esh_shell shell =
 {
+	.get_jobs = get_jobs,
+	.get_job_from_jid = get_job_from_jid,
+	.get_job_from_pgrp = get_job_from_pgrp,
+	.get_cmd_from_pid = get_cmd_from_pid,
+	
     .build_prompt = build_prompt_from_plugins,
     .readline = readline,       /* GNU readline(3) */ 
     .parse_command_line = esh_parse_command_line /* Default parser */
